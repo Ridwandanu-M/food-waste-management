@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum PlanStatus {
+  DRAFT
+  APPROVED
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  name            String
+  email           String           @unique
+  password        String           
+  role            Role             @default(STAFF)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  dailyRecords    DailyRecord[]    // Laporan yang diinput oleh Staf
+  productionPlans ProductionPlan[] // Rencana yang dikelola oleh Manager
+}
+
+model Menu {
+  id              Int              @id @default(autoincrement())
+  name            String
+  unit            String           
+  baseCost        Float            
+  price           Float          
+  isActive        Boolean          @default(true) // Untuk fitur soft delete
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relasi
+  dailyRecords    DailyRecord[]
+  forecastResults ForecastResult[]
+  productionPlans ProductionPlan[]
+}
+
+model DailyRecord {
+  id               Int      @id @default(autoincrement())
+  date             DateTime @db.Date // Hanya menyimpan tanggal (tanpa jam)
+  actualProduction Float
+  actualSales      Float
+  wasteAmount      Float
+  
+  // Opsional: Buka komentar di bawah jika ingin menambah variabel ML Eksternal
+  // isHoliday     Boolean  @default(false)
+  // hasPromo      Boolean  @default(false)
+
+  createdAt        DateTime @default(now())
+
+  menuId           Int
+  menu             Menu     @relation(fields: [menuId], references: [id])
+  
+  staffId          Int
+  staff            User     @relation(fields: [staffId], references: [id])
+
+  @@unique([date, menuId]) 
+}
+
+model ForecastResult {
+  id              Int      @id @default(autoincrement())
+  targetDate      DateTime @db.Date
+  predictedDemand Float
+  confidenceLevel Float?   
+  createdAt       DateTime @default(now())
+
+  menuId          Int
+  menu            Menu     @relation(fields: [menuId], references: [id])
+
+  @@unique([targetDate, menuId])
+}
+
+model ProductionPlan {
+  id                Int        @id @default(autoincrement())
+  targetDate        DateTime   @db.Date
+  
+  predictedAmount   Float      
+  plannedAmount     Float      
+  warningStatus     String     @default("AMAN") 
+  
+  status            PlanStatus @default(DRAFT)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  menuId            Int
+  menu              Menu       @relation(fields: [menuId], references: [id])
+
+  managerId         Int?       
+  manager           User?      @relation(fields: [managerId], references: [id])
+
+  @@unique([targetDate, menuId])
+}
