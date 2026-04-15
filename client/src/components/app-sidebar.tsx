@@ -30,32 +30,32 @@ const data = {
     {
       title: "Dashboard",
       url: "/",
-      icon: <LayoutDashboard strokeWidth={2} size={28} />,
+      icon: <LayoutDashboard strokeWidth={2} size={24} />,
     },
     {
       title: "Perencanaan",
-      url: "/",
-      icon: <ChartColumn strokeWidth={2} size={28} />,
+      url: "/perencanaan",
+      icon: <ChartColumn strokeWidth={2} size={24} />,
     },
     {
       title: "Entri Data",
-      url: "/",
-      icon: <BetweenHorizontalEnd strokeWidth={2} size={28} />,
+      url: "/entri-data",
+      icon: <BetweenHorizontalEnd strokeWidth={2} size={24} />,
     },
     {
       title: "Laporan",
-      url: "/",
-      icon: <ChartNoAxesCombined strokeWidth={2} size={28} />,
+      url: "/laporan",
+      icon: <ChartNoAxesCombined strokeWidth={2} size={24} />,
     },
     {
       title: "Manajemen",
-      url: "/",
-      icon: <Users strokeWidth={2} size={28} />,
+      url: "/manajemen",
+      icon: <Users strokeWidth={2} size={24} />,
     },
     {
       title: "Pengaturan",
-      url: "/",
-      icon: <Settings strokeWidth={2} size={28} />,
+      url: "/pengaturan",
+      icon: <Settings strokeWidth={2} size={24} />,
     },
   ],
 };
@@ -72,18 +72,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* We create a SidebarGroup for each parent. */}
         <ul className="flex flex-col gap-2">
           {data.navMain.map((item) => (
-            <li
+            <NavLink
               key={item.title}
-              className="p-4 hover:bg-emerald-50 cursor-pointer hover:text-emerald-900 hover:border-r-4 hover:border-r-emerald-800"
+              to={item.url}
+              className={({ isActive }) =>
+                isActive
+                  ? "flex items-center gap-2 text-sm p-4 pl-8 bg-emerald-50 cursor-pointer text-emerald-900 border-r-4 border-r-emerald-800"
+                  : "flex items-center gap-2 text-sm p-4 pl-8 hover:bg-emerald-50 cursor-pointer hover:text-emerald-900 hover:border-r-4 hover:border-r-emerald-800"
+              }
             >
-              <NavLink
-                to={item.url}
-                className="flex items-center gap-2 text-sm"
-              >
-                {item.icon}
-                {item.title}
-              </NavLink>
-            </li>
+              {item.icon}
+              {item.title}
+            </NavLink>
           ))}
         </ul>
       </SidebarContent>
