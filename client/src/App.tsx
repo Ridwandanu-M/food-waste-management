@@ -4,11 +4,12 @@ import { Route, Routes } from "react-router";
 import Dashboard from "./pages/Manager/Dashboard";
 import ManagerLayout from "./layout/ManagerLayout";
 import Perencanaan from "./pages/Manager/Perencanaan";
-import EntriData from "./pages/Manager/EntriData";
-import Laporan from "./pages/Manager/Laporan";
+import EntriData from "./pages/EntriData";
+import Laporan from "./pages/Laporan";
 import Manajemen from "./pages/Manager/Manajemen";
 import Pengaturan from "./pages/Manager/Pengaturan";
 import StaffLayout from "./layout/StaffLayout";
+import LoginPage from "./pages/Login/LoginPage";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<ManagerLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="perencanaan" element={<Perencanaan />} />
