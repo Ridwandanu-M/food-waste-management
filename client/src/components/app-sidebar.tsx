@@ -31,36 +31,49 @@ const data = {
       title: "Dashboard",
       url: "/",
       icon: <LayoutDashboard strokeWidth={2} size={24} />,
+      isStuff: false,
     },
     {
       title: "Perencanaan",
       url: "/perencanaan",
       icon: <ChartColumn strokeWidth={2} size={24} />,
+      isStuff: false,
     },
     {
       title: "Entri Data",
       url: "/entri-data",
       icon: <BetweenHorizontalEnd strokeWidth={2} size={24} />,
+      isStuff: true,
     },
     {
       title: "Laporan",
       url: "/laporan",
       icon: <ChartNoAxesCombined strokeWidth={2} size={24} />,
+      isStuff: true,
     },
     {
       title: "Manajemen",
       url: "/manajemen",
       icon: <Users strokeWidth={2} size={24} />,
+      isStuff: false,
     },
     {
       title: "Pengaturan",
       url: "/pengaturan",
       icon: <Settings strokeWidth={2} size={24} />,
+      isStuff: false,
     },
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  isStuff?: boolean;
+}
+
+export function AppSidebar({ isStuff = false, ...props }: AppSidebarProps) {
+  const filteredNav = isStuff
+    ? data.navMain.filter((item) => item.isStuff)
+    : data.navMain;
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -71,10 +84,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         {/* We create a SidebarGroup for each parent. */}
         <ul className="flex flex-col gap-2">
-          {data.navMain.map((item) => (
+          {filteredNav.map((item) => (
             <NavLink
               key={item.title}
-              to={item.url}
+              to={isStuff ? `/staff${item.url}` : item.url}
               className={({ isActive }) =>
                 isActive
                   ? "flex items-center gap-2 text-sm p-4 pl-8 bg-emerald-50 cursor-pointer text-emerald-900 border-r-4 border-r-emerald-800"

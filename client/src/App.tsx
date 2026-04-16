@@ -8,6 +8,7 @@ import EntriData from "./pages/Manager/EntriData";
 import Laporan from "./pages/Manager/Laporan";
 import Manajemen from "./pages/Manager/Manajemen";
 import Pengaturan from "./pages/Manager/Pengaturan";
+import StaffLayout from "./layout/StaffLayout";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,10 @@ export default function App() {
           <Route path="laporan" element={<Laporan />} />
           <Route path="manajemen" element={<Manajemen />} />
           <Route path="pengaturan" element={<Pengaturan />} />
+        </Route>
+        <Route path="staff" element={<StaffLayout />}>
+          <Route path="entri-data" element={<EntriData />} />
+          <Route path="laporan" element={<Laporan />} />
         </Route>
       </Routes>
       <ReactQueryDevtools initialIsOpen={false} />

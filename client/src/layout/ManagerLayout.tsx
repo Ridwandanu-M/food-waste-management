@@ -19,7 +19,7 @@ import { CircleUserRound } from "lucide-react";
 export default function ManagerLayout() {
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar isStuff={false} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1m mr-auto text-emerald-900 hover:bg-emerald-50 cursor-pointer hover:text-emerald-900" />
