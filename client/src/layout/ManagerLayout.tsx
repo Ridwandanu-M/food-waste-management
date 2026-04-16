@@ -22,11 +22,11 @@ export default function ManagerLayout() {
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1m mr-auto" />
+          <SidebarTrigger className="-ml-1m mr-auto text-emerald-900 hover:bg-emerald-50 cursor-pointer hover:text-emerald-900" />
           <div className="flex items-center gap-2">
             <div className="text-right text-sm">
-              <p className="text-emerald-900 font-medium">Hello World</p>
-              <p className="text-gray-500">Manager Perusahaan</p>
+              <p className="text-emerald-900 font-semibold">Manajer</p>
+              <p className="text-gray-500">Manajer Perusahaan</p>
             </div>
             <div>
               <CircleUserRound className="text-emerald-900" size={36} />
