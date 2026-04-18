@@ -21,7 +21,7 @@ export default function ManagerLayout() {
     <SidebarProvider>
       <AppSidebar isStuff={false} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex sticky top-0 z-10 h-16 bg-white shrink-0 items-center gap-2 border-b px-4 w-full">
           <SidebarTrigger className="-ml-1m mr-auto text-emerald-900 hover:bg-emerald-50 cursor-pointer hover:text-emerald-900" />
           <div className="flex items-center gap-2">
             <div className="text-right text-sm">
@@ -33,7 +33,7 @@ export default function ManagerLayout() {
             </div>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
+        <div className="flex flex-1 flex-col gap-4 p-4 bg-[#F7F9FB]">
           <Outlet />
         </div>
       </SidebarInset>
