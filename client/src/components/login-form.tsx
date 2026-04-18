@@ -22,11 +22,11 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader className="text-center">
-          <Leaf className="mx-auto text-emerald-900" size={48} />
-          <CardTitle className="text-2xl text-emerald-900 font-semibold">
-            Food Management
+      <Card className="z-10">
+        <CardHeader className="flex flex-col justify-center items-center">
+          <Leaf size={56} color="#fff" fill="#004d40" />
+          <CardTitle className="text-2xl font-semibold">
+            Masuk Manajer
           </CardTitle>
           <CardDescription>
             Analisis produksi makanan kedepannya
@@ -58,12 +58,6 @@ export function LoginForm({
               </Field>
               <Field>
                 <Button type="submit">Login</Button>
-                <Button variant="outline" type="button">
-                  Login with Google
-                </Button>
-                <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="#">Sign up</a>
-                </FieldDescription>
               </Field>
             </FieldGroup>
           </form>

@@ -16,21 +16,23 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<ManagerLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="perencanaan" element={<Perencanaan />} />
-          <Route path="entri-data" element={<EntriData />} />
-          <Route path="laporan" element={<Laporan />} />
-          <Route path="manajemen" element={<Manajemen />} />
-          <Route path="pengaturan" element={<Pengaturan />} />
-        </Route>
-        <Route path="staff" element={<StaffLayout />}>
-          <Route path="entri-data" element={<EntriData />} />
-          <Route path="laporan" element={<Laporan />} />
-        </Route>
-      </Routes>
+      <div className="bg-[#F7F9FB]">
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<ManagerLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="perencanaan" element={<Perencanaan />} />
+            <Route path="entri-data" element={<EntriData />} />
+            <Route path="laporan" element={<Laporan />} />
+            <Route path="manajemen" element={<Manajemen />} />
+            <Route path="pengaturan" element={<Pengaturan />} />
+          </Route>
+          <Route path="staff" element={<StaffLayout />}>
+            <Route path="entri-data" element={<EntriData />} />
+            <Route path="laporan" element={<Laporan />} />
+          </Route>
+        </Routes>
+      </div>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
