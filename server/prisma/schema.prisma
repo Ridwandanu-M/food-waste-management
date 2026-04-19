@@ -24,86 +24,82 @@ enum PlanStatus {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
-  name            String
-  email           String           @unique
-  password        String           
-  role            Role             @default(STAFF)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STAFF)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  dailyRecords    DailyRecord[]    // Laporan yang diinput oleh Staf
-  productionPlans ProductionPlan[] // Rencana yang dikelola oleh Manager
+  dailyRecords    DailyRecord[]
+  productionPlans ProductionPlan[]
 }
 
 model Menu {
-  id              Int              @id @default(autoincrement())
-  name            String
-  unit            String           
-  baseCost        Float            
-  price           Float          
-  isActive        Boolean          @default(true) // Untuk fitur soft delete
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id        String   @id @default(uuid())
+  name      String
+  unit      String
+  baseCost  Float
+  price     Float
+  category  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relasi
   dailyRecords    DailyRecord[]
   forecastResults ForecastResult[]
   productionPlans ProductionPlan[]
 }
 
 model DailyRecord {
-  id               Int      @id @default(autoincrement())
-  date             DateTime @db.Date // Hanya menyimpan tanggal (tanpa jam)
+  id               String   @id @default(uuid())
+  date             DateTime
   actualProduction Float
   actualSales      Float
   wasteAmount      Float
-  
-  // Opsional: Buka komentar di bawah jika ingin menambah variabel ML Eksternal
-  // isHoliday     Boolean  @default(false)
-  // hasPromo      Boolean  @default(false)
-
+  menuId           String
+  staffId          String
   createdAt        DateTime @default(now())
 
-  menuId           Int
-  menu             Menu     @relation(fields: [menuId], references: [id])
-  
-  staffId          Int
-  staff            User     @relation(fields: [staffId], references: [id])
+  menu  Menu @relation(fields: [menuId], references: [id])
+  staff User @relation(fields: [staffId], references: [id])
 
-  @@unique([date, menuId]) 
+  @@unique([menuId, date, staffId])
+  @@index([menuId, date])
 }
 
 model ForecastResult {
-  id              Int      @id @default(autoincrement())
+  id              String   @id @default(uuid())
   targetDate      DateTime @db.Date
   predictedDemand Float
-  confidenceLevel Float?   
+  confidenceLevel Float?
   createdAt       DateTime @default(now())
 
-  menuId          Int
-  menu            Menu     @relation(fields: [menuId], references: [id])
+  menuId String
+  menu   Menu   @relation(fields: [menuId], references: [id])
 
   @@unique([targetDate, menuId])
 }
 
 model ProductionPlan {
-  id                Int        @id @default(autoincrement())
-  targetDate        DateTime   @db.Date
-  
-  predictedAmount   Float      
-  plannedAmount     Float      
-  warningStatus     String     @default("AMAN") 
-  
-  status            PlanStatus @default(DRAFT)
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  id         String   @id @default(uuid())
+  targetDate DateTime @db.Date
 
-  menuId            Int
-  menu              Menu       @relation(fields: [menuId], references: [id])
+  predictedAmount Float
+  plannedAmount   Float
+  warningStatus   String @default("AMAN")
 
-  managerId         Int?       
-  manager           User?      @relation(fields: [managerId], references: [id])
+  status    PlanStatus @default(DRAFT)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  menuId String
+  menu   Menu   @relation(fields: [menuId], references: [id])
+
+  managerId String?
+  manager   User?   @relation(fields: [managerId], references: [id])
 
   @@unique([targetDate, menuId])
 }

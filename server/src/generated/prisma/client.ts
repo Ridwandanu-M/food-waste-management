@@ -14,12 +14,12 @@ import * as process from 'node:process'
 import * as path from 'node:path'
 
 import * as runtime from "@prisma/client/runtime/client"
-import * as $Enums from "./enums"
-import * as $Class from "./internal/class"
-import * as Prisma from "./internal/prismaNamespace"
+import * as $Enums from "./enums.ts"
+import * as $Class from "./internal/class.ts"
+import * as Prisma from "./internal/prismaNamespace.ts"
 
-export * as $Enums from './enums'
-export * from "./enums"
+export * as $Enums from './enums.ts'
+export * from "./enums.ts"
 /**
  * ## Prisma Client
  * 
@@ -29,8 +29,8 @@ export * from "./enums"
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more Users
- * const users = await prisma.user.findMany()
+ * // Fetch zero or more Media
+ * const media = await prisma.media.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -40,27 +40,47 @@ export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts exten
 export { Prisma }
 
 /**
- * Model User
+ * Model media
  * 
  */
-export type User = Prisma.UserModel
+export type media = Prisma.mediaModel
 /**
- * Model Menu
+ * Model payload_kv
  * 
  */
-export type Menu = Prisma.MenuModel
+export type payload_kv = Prisma.payload_kvModel
 /**
- * Model DailyRecord
+ * Model payload_locked_documents
  * 
  */
-export type DailyRecord = Prisma.DailyRecordModel
+export type payload_locked_documents = Prisma.payload_locked_documentsModel
 /**
- * Model ForecastResult
+ * Model payload_locked_documents_rels
  * 
  */
-export type ForecastResult = Prisma.ForecastResultModel
+export type payload_locked_documents_rels = Prisma.payload_locked_documents_relsModel
 /**
- * Model ProductionPlan
+ * Model payload_migrations
  * 
  */
-export type ProductionPlan = Prisma.ProductionPlanModel
+export type payload_migrations = Prisma.payload_migrationsModel
+/**
+ * Model payload_preferences
+ * 
+ */
+export type payload_preferences = Prisma.payload_preferencesModel
+/**
+ * Model payload_preferences_rels
+ * 
+ */
+export type payload_preferences_rels = Prisma.payload_preferences_relsModel
+/**
+ * Model users
+ * 
+ */
+export type users = Prisma.usersModel
+/**
+ * Model users_sessions
+ * 
+ */
+export type users_sessions = Prisma.users_sessionsModel
