@@ -24,7 +24,7 @@ enum PlanStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   name      String
   email     String   @unique
   password  String
@@ -35,15 +35,17 @@ model User {
 
   dailyRecords    DailyRecord[]
   productionPlans ProductionPlan[]
+
+  @@map("users")
 }
 
 model Menu {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   name      String
+  category  String
   unit      String
   baseCost  Float
   price     Float
-  category  String
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -51,11 +53,13 @@ model Menu {
   dailyRecords    DailyRecord[]
   forecastResults ForecastResult[]
   productionPlans ProductionPlan[]
+
+  @@map("menus")
 }
 
 model DailyRecord {
-  id               String   @id @default(uuid())
-  date             DateTime
+  id               String   @id @default(cuid())
+  date             DateTime @db.Date
   actualProduction Float
   actualSales      Float
   wasteAmount      Float
@@ -68,38 +72,53 @@ model DailyRecord {
 
   @@unique([menuId, date, staffId])
   @@index([menuId, date])
+  @@map("daily_records")
 }
 
 model ForecastResult {
-  id              String   @id @default(uuid())
+  id              String   @id @default(cuid())
   targetDate      DateTime @db.Date
   predictedDemand Float
-  confidenceLevel Float?
+  confidenceLevel Float    @default(0)
+  insight         String?
+  menuId          String
   createdAt       DateTime @default(now())
 
-  menuId String
-  menu   Menu   @relation(fields: [menuId], references: [id])
+  menu Menu @relation(fields: [menuId], references: [id])
 
-  @@unique([targetDate, menuId])
+  @@index([menuId, targetDate])
+  @@map("forecast_results")
 }
 
 model ProductionPlan {
-  id         String   @id @default(uuid())
-  targetDate DateTime @db.Date
-
+  id              String     @id @default(cuid())
+  targetDate      DateTime   @db.Date
   predictedAmount Float
   plannedAmount   Float
-  warningStatus   String @default("AMAN")
+  warningStatus   String     @default("AMAN")
+  status          PlanStatus @default(DRAFT)
+  menuId          String
+  managerId       String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  status    PlanStatus @default(DRAFT)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  menu    Menu @relation(fields: [menuId], references: [id])
+  manager User @relation(fields: [managerId], references: [id])
 
-  menuId String
-  menu   Menu   @relation(fields: [menuId], references: [id])
+  @@unique([menuId, targetDate])
+  @@index([targetDate])
+  @@map("production_plans")
+}
 
-  managerId String?
-  manager   User?   @relation(fields: [managerId], references: [id])
+model SystemSettings {
+  id                      String   @id @default(cuid())
+  restaurantName          String   @default("")
+  timezone                String   @default("Asia/Jakarta")
+  currency                String   @default("IDR")
+  wasteTolerancePercent   Int      @default(15)
+  notifyDailySummary      Boolean  @default(true)
+  notifyWarningEscalation Boolean  @default(true)
+  updatedAt               DateTime @updatedAt
 
-  @@unique([targetDate, menuId])
+  @@map("system_settings")
 }

@@ -51,15 +51,12 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  media: 'media',
-  payload_kv: 'payload_kv',
-  payload_locked_documents: 'payload_locked_documents',
-  payload_locked_documents_rels: 'payload_locked_documents_rels',
-  payload_migrations: 'payload_migrations',
-  payload_preferences: 'payload_preferences',
-  payload_preferences_rels: 'payload_preferences_rels',
-  users: 'users',
-  users_sessions: 'users_sessions'
+  User: 'User',
+  Menu: 'Menu',
+  DailyRecord: 'DailyRecord',
+  ForecastResult: 'ForecastResult',
+  ProductionPlan: 'ProductionPlan',
+  SystemSettings: 'SystemSettings'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -78,114 +75,90 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-export const MediaScalarFieldEnum = {
-  id: 'id',
-  alt: 'alt',
-  updated_at: 'updated_at',
-  created_at: 'created_at',
-  url: 'url',
-  thumbnail_u_r_l: 'thumbnail_u_r_l',
-  filename: 'filename',
-  mime_type: 'mime_type',
-  filesize: 'filesize',
-  width: 'width',
-  height: 'height',
-  focal_x: 'focal_x',
-  focal_y: 'focal_y'
-} as const
-
-export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
-
-
-export const Payload_kvScalarFieldEnum = {
-  id: 'id',
-  key: 'key',
-  data: 'data'
-} as const
-
-export type Payload_kvScalarFieldEnum = (typeof Payload_kvScalarFieldEnum)[keyof typeof Payload_kvScalarFieldEnum]
-
-
-export const Payload_locked_documentsScalarFieldEnum = {
-  id: 'id',
-  global_slug: 'global_slug',
-  updated_at: 'updated_at',
-  created_at: 'created_at'
-} as const
-
-export type Payload_locked_documentsScalarFieldEnum = (typeof Payload_locked_documentsScalarFieldEnum)[keyof typeof Payload_locked_documentsScalarFieldEnum]
-
-
-export const Payload_locked_documents_relsScalarFieldEnum = {
-  id: 'id',
-  order: 'order',
-  parent_id: 'parent_id',
-  path: 'path',
-  users_id: 'users_id',
-  media_id: 'media_id'
-} as const
-
-export type Payload_locked_documents_relsScalarFieldEnum = (typeof Payload_locked_documents_relsScalarFieldEnum)[keyof typeof Payload_locked_documents_relsScalarFieldEnum]
-
-
-export const Payload_migrationsScalarFieldEnum = {
+export const UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  batch: 'batch',
-  updated_at: 'updated_at',
-  created_at: 'created_at'
-} as const
-
-export type Payload_migrationsScalarFieldEnum = (typeof Payload_migrationsScalarFieldEnum)[keyof typeof Payload_migrationsScalarFieldEnum]
-
-
-export const Payload_preferencesScalarFieldEnum = {
-  id: 'id',
-  key: 'key',
-  value: 'value',
-  updated_at: 'updated_at',
-  created_at: 'created_at'
-} as const
-
-export type Payload_preferencesScalarFieldEnum = (typeof Payload_preferencesScalarFieldEnum)[keyof typeof Payload_preferencesScalarFieldEnum]
-
-
-export const Payload_preferences_relsScalarFieldEnum = {
-  id: 'id',
-  order: 'order',
-  parent_id: 'parent_id',
-  path: 'path',
-  users_id: 'users_id'
-} as const
-
-export type Payload_preferences_relsScalarFieldEnum = (typeof Payload_preferences_relsScalarFieldEnum)[keyof typeof Payload_preferences_relsScalarFieldEnum]
-
-
-export const UsersScalarFieldEnum = {
-  id: 'id',
-  updated_at: 'updated_at',
-  created_at: 'created_at',
   email: 'email',
-  reset_password_token: 'reset_password_token',
-  reset_password_expiration: 'reset_password_expiration',
-  salt: 'salt',
-  hash: 'hash',
-  login_attempts: 'login_attempts',
-  lock_until: 'lock_until'
+  password: 'password',
+  role: 'role',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
-export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
-export const Users_sessionsScalarFieldEnum = {
-  order: 'order',
-  parent_id: 'parent_id',
+export const MenuScalarFieldEnum = {
   id: 'id',
-  created_at: 'created_at',
-  expires_at: 'expires_at'
+  name: 'name',
+  category: 'category',
+  unit: 'unit',
+  baseCost: 'baseCost',
+  price: 'price',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
-export type Users_sessionsScalarFieldEnum = (typeof Users_sessionsScalarFieldEnum)[keyof typeof Users_sessionsScalarFieldEnum]
+export type MenuScalarFieldEnum = (typeof MenuScalarFieldEnum)[keyof typeof MenuScalarFieldEnum]
+
+
+export const DailyRecordScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  actualProduction: 'actualProduction',
+  actualSales: 'actualSales',
+  wasteAmount: 'wasteAmount',
+  menuId: 'menuId',
+  staffId: 'staffId',
+  createdAt: 'createdAt'
+} as const
+
+export type DailyRecordScalarFieldEnum = (typeof DailyRecordScalarFieldEnum)[keyof typeof DailyRecordScalarFieldEnum]
+
+
+export const ForecastResultScalarFieldEnum = {
+  id: 'id',
+  targetDate: 'targetDate',
+  predictedDemand: 'predictedDemand',
+  confidenceLevel: 'confidenceLevel',
+  insight: 'insight',
+  menuId: 'menuId',
+  createdAt: 'createdAt'
+} as const
+
+export type ForecastResultScalarFieldEnum = (typeof ForecastResultScalarFieldEnum)[keyof typeof ForecastResultScalarFieldEnum]
+
+
+export const ProductionPlanScalarFieldEnum = {
+  id: 'id',
+  targetDate: 'targetDate',
+  predictedAmount: 'predictedAmount',
+  plannedAmount: 'plannedAmount',
+  warningStatus: 'warningStatus',
+  status: 'status',
+  menuId: 'menuId',
+  managerId: 'managerId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductionPlanScalarFieldEnum = (typeof ProductionPlanScalarFieldEnum)[keyof typeof ProductionPlanScalarFieldEnum]
+
+
+export const SystemSettingsScalarFieldEnum = {
+  id: 'id',
+  restaurantName: 'restaurantName',
+  timezone: 'timezone',
+  currency: 'currency',
+  wasteTolerancePercent: 'wasteTolerancePercent',
+  notifyDailySummary: 'notifyDailySummary',
+  notifyWarningEscalation: 'notifyWarningEscalation',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SystemSettingsScalarFieldEnum = (typeof SystemSettingsScalarFieldEnum)[keyof typeof SystemSettingsScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -194,21 +167,6 @@ export const SortOrder = {
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
-
-
-export const JsonNullValueInput = {
-  JsonNull: JsonNull
-} as const
-
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
-
-
-export const NullableJsonNullValueInput = {
-  DbNull: DbNull,
-  JsonNull: JsonNull
-} as const
-
-export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -225,13 +183,4 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
-export const JsonNullValueFilter = {
-  DbNull: DbNull,
-  JsonNull: JsonNull,
-  AnyNull: AnyNull
-} as const
-
-export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

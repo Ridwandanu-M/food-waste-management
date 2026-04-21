@@ -29,8 +29,8 @@ export * from "./enums.ts"
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more Media
- * const media = await prisma.media.findMany()
+ * // Fetch zero or more Users
+ * const users = await prisma.user.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -40,47 +40,32 @@ export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts exten
 export { Prisma }
 
 /**
- * Model media
+ * Model User
  * 
  */
-export type media = Prisma.mediaModel
+export type User = Prisma.UserModel
 /**
- * Model payload_kv
+ * Model Menu
  * 
  */
-export type payload_kv = Prisma.payload_kvModel
+export type Menu = Prisma.MenuModel
 /**
- * Model payload_locked_documents
+ * Model DailyRecord
  * 
  */
-export type payload_locked_documents = Prisma.payload_locked_documentsModel
+export type DailyRecord = Prisma.DailyRecordModel
 /**
- * Model payload_locked_documents_rels
+ * Model ForecastResult
  * 
  */
-export type payload_locked_documents_rels = Prisma.payload_locked_documents_relsModel
+export type ForecastResult = Prisma.ForecastResultModel
 /**
- * Model payload_migrations
+ * Model ProductionPlan
  * 
  */
-export type payload_migrations = Prisma.payload_migrationsModel
+export type ProductionPlan = Prisma.ProductionPlanModel
 /**
- * Model payload_preferences
+ * Model SystemSettings
  * 
  */
-export type payload_preferences = Prisma.payload_preferencesModel
-/**
- * Model payload_preferences_rels
- * 
- */
-export type payload_preferences_rels = Prisma.payload_preferences_relsModel
-/**
- * Model users
- * 
- */
-export type users = Prisma.usersModel
-/**
- * Model users_sessions
- * 
- */
-export type users_sessions = Prisma.users_sessionsModel
+export type SystemSettings = Prisma.SystemSettingsModel
