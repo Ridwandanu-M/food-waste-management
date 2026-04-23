@@ -1,6 +1,6 @@
-import { Request, Response } from 'express'
-import { z } from 'zod'
-import { prisma } from '../lib/prisma'
+import { Request, Response } from "express";
+import { z } from "zod";
+import { prisma } from "../lib/prisma";
 
 const settingsSchema = z.object({
   restaurantName: z.string().optional(),
@@ -9,16 +9,18 @@ const settingsSchema = z.object({
   wasteTolerancePercent: z.number().int().min(1).max(100).optional(),
   notifyDailySummary: z.boolean().optional(),
   notifyWarningEscalation: z.boolean().optional(),
-})
+});
 
 export async function getSettings(_req: Request, res: Response): Promise<void> {
-  let settings = await prisma.systemSettings.findUnique({ where: { id: 'singleton' } })
+  let settings = await prisma.systemSettings.findUnique({
+    where: { id: "singleton" },
+  });
 
   // Auto-create jika belum ada
   if (!settings) {
     settings = await prisma.systemSettings.create({
-      data: { id: 'singleton' },
-    })
+      data: { id: "singleton" },
+    });
   }
 
   res.json({
@@ -28,17 +30,20 @@ export async function getSettings(_req: Request, res: Response): Promise<void> {
     wasteTolerancePercent: settings.wasteTolerancePercent,
     notifyDailySummary: settings.notifyDailySummary,
     notifyWarningEscalation: settings.notifyWarningEscalation,
-  })
+  });
 }
 
-export async function updateSettings(req: Request, res: Response): Promise<void> {
-  const data = settingsSchema.parse(req.body)
+export async function updateSettings(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const data = settingsSchema.parse(req.body);
 
   const settings = await prisma.systemSettings.upsert({
-    where: { id: 'singleton' },
+    where: { id: "singleton" },
     update: data,
-    create: { id: 'singleton', ...data },
-  })
+    create: { id: "singleton", ...data },
+  });
 
   res.json({
     restaurantName: settings.restaurantName,
@@ -47,5 +52,5 @@ export async function updateSettings(req: Request, res: Response): Promise<void>
     wasteTolerancePercent: settings.wasteTolerancePercent,
     notifyDailySummary: settings.notifyDailySummary,
     notifyWarningEscalation: settings.notifyWarningEscalation,
-  })
+  });
 }

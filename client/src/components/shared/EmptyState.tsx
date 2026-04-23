@@ -1,6 +1,6 @@
 interface Props {
-  message: string
-  action?: React.ReactNode
+  message: string;
+  action?: React.ReactNode;
 }
 
 export function EmptyState({ message, action }: Props) {
@@ -10,5 +10,5 @@ export function EmptyState({ message, action }: Props) {
       <p className="text-muted-foreground text-sm">{message}</p>
       {action}
     </div>
-  )
+  );
 }

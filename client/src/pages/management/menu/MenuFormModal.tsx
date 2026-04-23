@@ -1,80 +1,85 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { TrendingUp } from 'lucide-react'
-import { calcMargin, cn } from '@/lib/utils'
-import { MENU_CATEGORIES } from '@/lib/constants'
-import api from '@/lib/api'
-import type { Menu } from '@/types'
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { TrendingUp } from "lucide-react";
+import { calcMargin, cn } from "@/lib/utils";
+import { MENU_CATEGORIES } from "@/lib/constants";
+import api from "@/lib/api";
+import type { Menu } from "@/types";
 
 interface Props {
-  open: boolean
-  onOpenChange: (v: boolean) => void
-  menu: Menu | null
-  onSuccess: () => void
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  menu: Menu | null;
+  onSuccess: () => void;
 }
 
-export default function MenuFormModal({ open, onOpenChange, menu, onSuccess }: Props) {
-  const isEdit = !!menu
-  const [name, setName] = useState('')
-  const [category, setCategory] = useState('')
-  const [unit, setUnit] = useState('')
-  const [baseCost, setBaseCost] = useState('')
-  const [price, setPrice] = useState('')
-  const [isActive, setIsActive] = useState(true)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+export default function MenuFormModal({
+  open,
+  onOpenChange,
+  menu,
+  onSuccess,
+}: Props) {
+  const isEdit = !!menu;
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [unit, setUnit] = useState("");
+  const [baseCost, setBaseCost] = useState("");
+  const [price, setPrice] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const margin = calcMargin(Number(price), Number(baseCost))
+  const margin = calcMargin(Number(price), Number(baseCost));
   const marginColor =
     margin >= 40
-      ? 'text-emerald-600'
+      ? "text-emerald-600"
       : margin >= 20
-      ? 'text-amber-600'
-      : 'text-red-600'
+        ? "text-amber-600"
+        : "text-red-600";
 
   useEffect(() => {
     if (menu) {
-      setName(menu.name)
-      setCategory(menu.category)
-      setUnit(menu.unit)
-      setBaseCost(String(menu.baseCost))
-      setPrice(String(menu.price))
-      setIsActive(menu.isActive)
+      setName(menu.name);
+      setCategory(menu.category);
+      setUnit(menu.unit);
+      setBaseCost(String(menu.baseCost));
+      setPrice(String(menu.price));
+      setIsActive(menu.isActive);
     } else {
-      setName('')
-      setCategory('')
-      setUnit('')
-      setBaseCost('')
-      setPrice('')
-      setIsActive(true)
+      setName("");
+      setCategory("");
+      setUnit("");
+      setBaseCost("");
+      setPrice("");
+      setIsActive(true);
     }
-    setError('')
-  }, [menu, open])
+    setError("");
+  }, [menu, open]);
 
   async function handleSubmit() {
     if (!name || !category || !unit || !baseCost || !price) {
-      setError('Semua field wajib diisi.')
-      return
+      setError("Semua field wajib diisi.");
+      return;
     }
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
     try {
       const payload = {
         name,
@@ -83,17 +88,17 @@ export default function MenuFormModal({ open, onOpenChange, menu, onSuccess }: P
         baseCost: Number(baseCost),
         price: Number(price),
         isActive,
-      }
+      };
       if (isEdit) {
-        await api.patch(`/menus/${menu!.id}`, payload)
+        await api.patch(`/menus/${menu!.id}`, payload);
       } else {
-        await api.post('/menus', payload)
+        await api.post("/menus", payload);
       }
-      onSuccess()
+      onSuccess();
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Terjadi kesalahan. Coba lagi.')
+      setError(e?.response?.data?.message ?? "Terjadi kesalahan. Coba lagi.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -101,7 +106,7 @@ export default function MenuFormModal({ open, onOpenChange, menu, onSuccess }: P
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit Menu' : 'Tambah Menu Baru'}</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Menu" : "Tambah Menu Baru"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -170,8 +175,15 @@ export default function MenuFormModal({ open, onOpenChange, menu, onSuccess }: P
               </div>
             </div>
             <div className="flex items-center justify-between pt-1 border-t">
-              <span className="text-sm text-muted-foreground">Proyeksi Margin:</span>
-              <div className={cn('flex items-center gap-1 text-lg font-semibold', marginColor)}>
+              <span className="text-sm text-muted-foreground">
+                Proyeksi Margin:
+              </span>
+              <div
+                className={cn(
+                  "flex items-center gap-1 text-lg font-semibold",
+                  marginColor,
+                )}
+              >
                 {margin}% <TrendingUp size={16} />
               </div>
             </div>
@@ -182,7 +194,7 @@ export default function MenuFormModal({ open, onOpenChange, menu, onSuccess }: P
               <Label>Status Menu</Label>
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">
-                  {isActive ? 'Aktif' : 'Diarsipkan'}
+                  {isActive ? "Aktif" : "Diarsipkan"}
                 </span>
                 <Switch checked={isActive} onCheckedChange={setIsActive} />
               </div>
@@ -208,10 +220,10 @@ export default function MenuFormModal({ open, onOpenChange, menu, onSuccess }: P
             Batal
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Menyimpan...' : 'Simpan Menu'}
+            {loading ? "Menyimpan..." : "Simpan Menu"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

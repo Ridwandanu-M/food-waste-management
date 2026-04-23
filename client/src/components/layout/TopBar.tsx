@@ -1,5 +1,5 @@
-import { Bell, HelpCircle, Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Bell, HelpCircle, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function TopBar() {
   return (
@@ -22,5 +22,5 @@ export default function TopBar() {
         </button>
       </div>
     </header>
-  )
+  );
 }

@@ -1,69 +1,75 @@
-import { useEffect, useState } from 'react'
-import { Pencil, Archive, RotateCcw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useEffect, useState } from "react";
+import { Pencil, Archive, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { StatusBadge } from '@/components/shared/StatusBadge'
-import { EmptyState } from '@/components/shared/EmptyState'
-import MenuFormModal from './MenuFormModal'
-import { formatRupiah, calcMargin, cn } from '@/lib/utils'
-import { useDebounce } from '@/hooks/useDebounce'
-import api from '@/lib/api'
-import type { Menu } from '@/types'
+} from "@/components/ui/select";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
+import MenuFormModal from "./MenuFormModal";
+import { formatRupiah, calcMargin, cn } from "@/lib/utils";
+import { useDebounce } from "@/hooks/useDebounce";
+import api from "@/lib/api";
+import type { Menu } from "@/types";
 
 function MarginCell({ price, baseCost }: { price: number; baseCost: number }) {
-  const m = calcMargin(price, baseCost)
+  const m = calcMargin(price, baseCost);
   return (
     <span
       className={cn(
-        'font-medium',
-        m >= 40 ? 'text-emerald-600' : m >= 20 ? 'text-amber-600' : 'text-red-600'
+        "font-medium",
+        m >= 40
+          ? "text-emerald-600"
+          : m >= 20
+            ? "text-amber-600"
+            : "text-red-600",
       )}
     >
       {m}%
     </span>
-  )
+  );
 }
 
 export default function MenuPage() {
-  const [menus, setMenus] = useState<Menu[]>([])
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'active' | 'archived'>('ALL')
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editMenu, setEditMenu] = useState<Menu | null>(null)
-  const debouncedSearch = useDebounce(search)
+  const [menus, setMenus] = useState<Menu[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "active" | "archived"
+  >("ALL");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editMenu, setEditMenu] = useState<Menu | null>(null);
+  const debouncedSearch = useDebounce(search);
 
   async function fetchMenus() {
-    const params: Record<string, string> = {}
-    if (debouncedSearch) params.search = debouncedSearch
-    if (statusFilter !== 'ALL') params.status = statusFilter
-    const res = await api.get('/menus', { params })
-    setMenus(res.data)
+    const params: Record<string, string> = {};
+    if (debouncedSearch) params.search = debouncedSearch;
+    if (statusFilter !== "ALL") params.status = statusFilter;
+    const res = await api.get("/menus", { params });
+    setMenus(res.data);
   }
 
   useEffect(() => {
-    fetchMenus()
-  }, [debouncedSearch, statusFilter])
+    fetchMenus();
+  }, [debouncedSearch, statusFilter]);
 
   async function toggleArchive(menu: Menu) {
-    await api.patch(`/menus/${menu.id}`, { isActive: !menu.isActive })
-    fetchMenus()
+    await api.patch(`/menus/${menu.id}`, { isActive: !menu.isActive });
+    fetchMenus();
   }
 
   function openAdd() {
-    setEditMenu(null)
-    setModalOpen(true)
+    setEditMenu(null);
+    setModalOpen(true);
   }
 
   function openEdit(m: Menu) {
-    setEditMenu(m)
-    setModalOpen(true)
+    setEditMenu(m);
+    setModalOpen(true);
   }
 
   return (
@@ -113,16 +119,22 @@ export default function MenuPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/30">
-              {['Nama Menu', 'Satuan', 'Harga Jual', 'HPP', 'Margin', 'Status', 'Aksi'].map(
-                (h) => (
-                  <th
-                    key={h}
-                    className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide"
-                  >
-                    {h}
-                  </th>
-                )
-              )}
+              {[
+                "Nama Menu",
+                "Satuan",
+                "Harga Jual",
+                "HPP",
+                "Margin",
+                "Status",
+                "Aksi",
+              ].map((h) => (
+                <th
+                  key={h}
+                  className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide"
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -141,18 +153,29 @@ export default function MenuPage() {
               </tr>
             ) : (
               menus.map((m) => (
-                <tr key={m.id} className="border-b last:border-0 hover:bg-muted/10">
+                <tr
+                  key={m.id}
+                  className="border-b last:border-0 hover:bg-muted/10"
+                >
                   <td className="px-4 py-3 font-medium">{m.name}</td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 bg-muted rounded text-xs">{m.unit}</span>
+                    <span className="px-2 py-0.5 bg-muted rounded text-xs">
+                      {m.unit}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-right">{formatRupiah(m.price)}</td>
-                  <td className="px-4 py-3 text-right">{formatRupiah(m.baseCost)}</td>
+                  <td className="px-4 py-3 text-right">
+                    {formatRupiah(m.price)}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {formatRupiah(m.baseCost)}
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <MarginCell price={m.price} baseCost={m.baseCost} />
                   </td>
                   <td className="px-4 py-3">
-                    <StatusBadge variant={m.isActive ? 'aktif' : 'diarsipkan'} />
+                    <StatusBadge
+                      variant={m.isActive ? "aktif" : "diarsipkan"}
+                    />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
@@ -166,9 +189,13 @@ export default function MenuPage() {
                       <button
                         onClick={() => toggleArchive(m)}
                         className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-amber-600"
-                        title={m.isActive ? 'Arsipkan' : 'Pulihkan'}
+                        title={m.isActive ? "Arsipkan" : "Pulihkan"}
                       >
-                        {m.isActive ? <Archive size={14} /> : <RotateCcw size={14} />}
+                        {m.isActive ? (
+                          <Archive size={14} />
+                        ) : (
+                          <RotateCcw size={14} />
+                        )}
                       </button>
                     </div>
                   </td>
@@ -189,10 +216,10 @@ export default function MenuPage() {
         onOpenChange={setModalOpen}
         menu={editMenu}
         onSuccess={() => {
-          setModalOpen(false)
-          fetchMenus()
+          setModalOpen(false);
+          fetchMenus();
         }}
       />
     </div>
-  )
+  );
 }

@@ -1,63 +1,63 @@
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Save } from 'lucide-react'
-import { TOLERANCE_MIN, TOLERANCE_MAX } from '@/lib/constants'
-import { cn } from '@/lib/utils'
-import api from '@/lib/api'
-import type { SystemSettings } from '@/types'
+} from "@/components/ui/select";
+import { Save } from "lucide-react";
+import { TOLERANCE_MIN, TOLERANCE_MAX } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import api from "@/lib/api";
+import type { SystemSettings } from "@/types";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SystemSettings>({
-    restaurantName: '',
-    timezone: 'Asia/Jakarta',
-    currency: 'IDR',
+    restaurantName: "",
+    timezone: "Asia/Jakarta",
+    currency: "IDR",
     wasteTolerancePercent: 15,
     notifyDailySummary: true,
     notifyWarningEscalation: true,
-  })
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [confirmReset, setConfirmReset] = useState(false)
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
-    api.get('/settings').then((r) => setSettings(r.data))
-  }, [])
+    api.get("/settings").then((r) => setSettings(r.data));
+  }, []);
 
   function set<K extends keyof SystemSettings>(key: K, val: SystemSettings[K]) {
-    setSettings((prev) => ({ ...prev, [key]: val }))
+    setSettings((prev) => ({ ...prev, [key]: val }));
   }
 
   const toleranceWarning =
     settings.wasteTolerancePercent < TOLERANCE_MIN
       ? `⚠ Nilai minimum adalah ${TOLERANCE_MIN}%. Sensitivitas terlalu tinggi dapat memicu terlalu banyak peringatan.`
       : settings.wasteTolerancePercent > TOLERANCE_MAX
-      ? `⚠ Nilai maksimum adalah ${TOLERANCE_MAX}%. Toleransi terlalu longgar akan menonaktifkan efektivitas sistem.`
-      : null
+        ? `⚠ Nilai maksimum adalah ${TOLERANCE_MAX}%. Toleransi terlalu longgar akan menonaktifkan efektivitas sistem.`
+        : null;
 
   async function handleSave() {
-    setSaving(true)
+    setSaving(true);
     try {
-      await api.put('/settings', settings)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
+      await api.put("/settings", settings);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
   }
 
   async function handleResetForecast() {
-    await api.delete('/forecasts/all')
-    setConfirmReset(false)
+    await api.delete("/forecasts/all");
+    setConfirmReset(false);
   }
 
   return (
@@ -82,7 +82,7 @@ export default function SettingsPage() {
             <Label>Nama Restoran</Label>
             <Input
               value={settings.restaurantName}
-              onChange={(e) => set('restaurantName', e.target.value)}
+              onChange={(e) => set("restaurantName", e.target.value)}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -90,15 +90,21 @@ export default function SettingsPage() {
               <Label>Zona Waktu</Label>
               <Select
                 value={settings.timezone}
-                onValueChange={(v) => set('timezone', v)}
+                onValueChange={(v) => set("timezone", v)}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Asia/Jakarta">Asia/Jakarta (WIB)</SelectItem>
-                  <SelectItem value="Asia/Makassar">Asia/Makassar (WITA)</SelectItem>
-                  <SelectItem value="Asia/Jayapura">Asia/Jayapura (WIT)</SelectItem>
+                  <SelectItem value="Asia/Jakarta">
+                    Asia/Jakarta (WIB)
+                  </SelectItem>
+                  <SelectItem value="Asia/Makassar">
+                    Asia/Makassar (WITA)
+                  </SelectItem>
+                  <SelectItem value="Asia/Jayapura">
+                    Asia/Jayapura (WIT)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -106,7 +112,7 @@ export default function SettingsPage() {
               <Label>Mata Uang</Label>
               <Select
                 value={settings.currency}
-                onValueChange={(v) => set('currency', v)}
+                onValueChange={(v) => set("currency", v)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -123,7 +129,9 @@ export default function SettingsPage() {
       {/* Parameter EWS */}
       <section className="bg-background border rounded-lg p-6 space-y-4">
         <div>
-          <h2 className="text-base font-medium">Parameter Early Warning System</h2>
+          <h2 className="text-base font-medium">
+            Parameter Early Warning System
+          </h2>
           <p className="text-xs text-muted-foreground">
             Atur sensitivitas peringatan pencegahan limbah berbasis AI.
           </p>
@@ -134,10 +142,14 @@ export default function SettingsPage() {
             <Input
               type="number"
               value={settings.wasteTolerancePercent}
-              onChange={(e) => set('wasteTolerancePercent', Number(e.target.value))}
+              onChange={(e) =>
+                set("wasteTolerancePercent", Number(e.target.value))
+              }
               className={cn(
-                'w-24',
-                toleranceWarning ? 'border-amber-400 focus-visible:ring-amber-400' : ''
+                "w-24",
+                toleranceWarning
+                  ? "border-amber-400 focus-visible:ring-amber-400"
+                  : "",
               )}
             />
             <span className="text-muted-foreground text-sm">%</span>
@@ -146,8 +158,9 @@ export default function SettingsPage() {
             <p className="text-xs text-amber-600">{toleranceWarning}</p>
           )}
           <div className="text-xs text-muted-foreground bg-muted/40 rounded-md p-3 mt-1">
-            Jika jumlah rencana produksi melebihi prakiraan AI ditambah toleransi ini,
-            sistem akan menampilkan peringatan risiko limbah tinggi kepada Manajer.
+            Jika jumlah rencana produksi melebihi prakiraan AI ditambah
+            toleransi ini, sistem akan menampilkan peringatan risiko limbah
+            tinggi kepada Manajer.
           </div>
         </div>
       </section>
@@ -165,20 +178,20 @@ export default function SettingsPage() {
             <Label>Kirim ringkasan harian ke Manajer via email</Label>
             <Switch
               checked={settings.notifyDailySummary}
-              onCheckedChange={(v) => set('notifyDailySummary', v)}
+              onCheckedChange={(v) => set("notifyDailySummary", v)}
             />
           </div>
           <div className="flex items-start justify-between gap-4">
             <div>
               <Label>Eskalasi Peringatan</Label>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Notifikasi jika Manager mengabaikan peringatan AI lebih dari 3 kali
-                berturut-turut.
+                Notifikasi jika Manager mengabaikan peringatan AI lebih dari 3
+                kali berturut-turut.
               </p>
             </div>
             <Switch
               checked={settings.notifyWarningEscalation}
-              onCheckedChange={(v) => set('notifyWarningEscalation', v)}
+              onCheckedChange={(v) => set("notifyWarningEscalation", v)}
             />
           </div>
         </div>
@@ -196,8 +209,8 @@ export default function SettingsPage() {
           <div>
             <div className="text-sm font-medium">Reset Data Forecast</div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              Tindakan ini akan menghapus semua hasil forecast tersimpan. Data produksi
-              harian tidak akan terpengaruh.
+              Tindakan ini akan menghapus semua hasil forecast tersimpan. Data
+              produksi harian tidak akan terpengaruh.
             </div>
           </div>
           {!confirmReset ? (
@@ -233,9 +246,9 @@ export default function SettingsPage() {
       <div className="flex justify-end pb-6">
         <Button onClick={handleSave} disabled={saving} className="gap-2">
           <Save size={14} />
-          {saved ? 'Tersimpan!' : saving ? 'Menyimpan...' : 'Simpan Pengaturan'}
+          {saved ? "Tersimpan!" : saving ? "Menyimpan..." : "Simpan Pengaturan"}
         </Button>
       </div>
     </div>
-  )
+  );
 }

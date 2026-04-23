@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -7,31 +7,31 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { formatRupiah } from '@/lib/utils'
-import api from '@/lib/api'
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { formatRupiah } from "@/lib/utils";
+import api from "@/lib/api";
 
 interface DashboardData {
-  totalWasteKg: number
-  wasteVsLastMonth: number
-  forecastAccuracy: number
-  accuracyVsTarget: number
-  estimatedWasteValue: number
-  topWasteMenus: { name: string; wasteKg: number }[]
-  chartData: { label: string; aktual: number; prakiraan: number }[]
+  totalWasteKg: number;
+  wasteVsLastMonth: number;
+  forecastAccuracy: number;
+  accuracyVsTarget: number;
+  estimatedWasteValue: number;
+  topWasteMenus: { name: string; wasteKg: number }[];
+  chartData: { label: string; aktual: number; prakiraan: number }[];
 }
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [period, setPeriod] = useState<'weekly' | 'monthly'>('monthly')
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [period, setPeriod] = useState<"weekly" | "monthly">("monthly");
 
   useEffect(() => {
-    api.get(`/dashboard?period=${period}`).then((r) => setData(r.data))
-  }, [period])
+    api.get(`/dashboard?period=${period}`).then((r) => setData(r.data));
+  }, [period]);
 
-  const topMax = data?.topWasteMenus?.[0]?.wasteKg ?? 1
+  const topMax = data?.topWasteMenus?.[0]?.wasteKg ?? 1;
 
   return (
     <div className="space-y-6">
@@ -47,7 +47,7 @@ export default function DashboardPage() {
               Total Limbah (Bulan Ini)
             </div>
             <div className="text-2xl font-semibold">
-              {data?.totalWasteKg ?? '—'} kg
+              {data?.totalWasteKg ?? "—"} kg
             </div>
             <div className="text-xs text-emerald-600 mt-1">
               +{data?.wasteVsLastMonth ?? 0}% vs bulan lalu
@@ -61,7 +61,7 @@ export default function DashboardPage() {
               Prakiraan Akurasi
             </div>
             <div className="text-2xl font-semibold">
-              {data?.forecastAccuracy ?? '—'}%
+              {data?.forecastAccuracy ?? "—"}%
             </div>
             <div className="text-xs text-emerald-600 mt-1">
               +{data?.accuracyVsTarget ?? 0}% vs target
@@ -75,7 +75,7 @@ export default function DashboardPage() {
               Estimasi Nilai Limbah
             </div>
             <div className="text-2xl font-semibold">
-              {data ? formatRupiah(data.estimatedWasteValue) : '—'}
+              {data ? formatRupiah(data.estimatedWasteValue) : "—"}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               Berdasarkan HPP menu × sisa produksi
@@ -93,18 +93,18 @@ export default function DashboardPage() {
             </CardTitle>
             <div className="flex gap-1">
               <Button
-                variant={period === 'weekly' ? 'default' : 'outline'}
+                variant={period === "weekly" ? "default" : "outline"}
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => setPeriod('weekly')}
+                onClick={() => setPeriod("weekly")}
               >
                 Mingguan
               </Button>
               <Button
-                variant={period === 'monthly' ? 'default' : 'outline'}
+                variant={period === "monthly" ? "default" : "outline"}
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => setPeriod('monthly')}
+                onClick={() => setPeriod("monthly")}
               >
                 Bulanan
               </Button>
@@ -136,14 +136,18 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Menu Limbah Teratas</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Menu Limbah Teratas
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {(data?.topWasteMenus ?? []).map((item) => (
               <div key={item.name}>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="font-medium">{item.name}</span>
-                  <span className="text-muted-foreground">{item.wasteKg} kg</span>
+                  <span className="text-muted-foreground">
+                    {item.wasteKg} kg
+                  </span>
                 </div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
@@ -157,5 +161,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

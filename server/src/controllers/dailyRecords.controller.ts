@@ -1,7 +1,7 @@
-import { Response } from 'express'
-import { z } from 'zod'
-import { prisma } from '../lib/prisma'
-import { AuthRequest } from '../middleware/auth'
+import { Response } from "express";
+import { z } from "zod";
+import { prisma } from "../lib/prisma";
+import { AuthRequest } from "../middlewares/auth";
 
 const recordSchema = z.object({
   menuId: z.string(),
@@ -9,18 +9,18 @@ const recordSchema = z.object({
   actualProduction: z.number().nonnegative(),
   actualSales: z.number().nonnegative(),
   wasteAmount: z.number().nonnegative(),
-})
+});
 
 const bulkSchema = z.object({
   records: z.array(recordSchema),
-})
+});
 
 export async function createDailyRecords(
   req: AuthRequest,
-  res: Response
+  res: Response,
 ): Promise<void> {
-  const { records } = bulkSchema.parse(req.body)
-  const staffId = req.user!.id
+  const { records } = bulkSchema.parse(req.body);
+  const staffId = req.user!.id;
 
   const created = await prisma.$transaction(
     records.map((r) =>
@@ -45,9 +45,9 @@ export async function createDailyRecords(
           wasteAmount: r.wasteAmount,
           staffId,
         },
-      })
-    )
-  )
+      }),
+    ),
+  );
 
-  res.status(201).json(created)
+  res.status(201).json(created);
 }
