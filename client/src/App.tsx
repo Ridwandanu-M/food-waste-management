@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import AppRouter from "./router";
 import { useAuth } from "./hooks/useAuth";
+import { Toaster } from "sonner";
 
 export default function App() {
   const { initAuth } = useAuth();
@@ -19,5 +20,10 @@ export default function App() {
     );
   }
 
-  return <AppRouter />;
+  return (
+    <>
+      <AppRouter />
+      <Toaster />
+    </>
+  );
 }

@@ -85,38 +85,6 @@ export default function LoginPage() {
               {loading ? "Memproses..." : "Masuk"}
             </Button>
           </form>
-
-          {/* Hint akun seed — hapus di production */}
-          {import.meta.env.DEV && (
-            <div className="mt-4 pt-3 border-t space-y-1">
-              <p className="text-[11px] text-muted-foreground text-center mb-2">
-                Akun development (dari seed):
-              </p>
-              {[
-                { label: "Admin", email: "admin@wastewise.id", pw: "admin123" },
-                {
-                  label: "Manajer",
-                  email: "manager@wastewise.id",
-                  pw: "manager123",
-                },
-                { label: "Staff", email: "staff@wastewise.id", pw: "staff123" },
-              ].map((a) => (
-                <button
-                  key={a.email}
-                  type="button"
-                  onClick={() => {
-                    setEmail(a.email);
-                    setPassword(a.pw);
-                  }}
-                  className="w-full text-left text-[11px] text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-muted transition-colors"
-                >
-                  <span className="font-medium">{a.label}</span>
-                  {" — "}
-                  {a.email}
-                </button>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Save } from "lucide-react";
+import { CardSkeleton } from "@/components/shared/PageLoader";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { toast } from "sonner";
 import { TOLERANCE_MIN, TOLERANCE_MAX } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -25,13 +28,25 @@ export default function SettingsPage() {
     notifyDailySummary: true,
     notifyWarningEscalation: true,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const fetchSettings = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    api
+      .get("/settings")
+      .then((r) => setSettings(r.data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
-    api.get("/settings").then((r) => setSettings(r.data));
-  }, []);
+    fetchSettings();
+  }, [fetchSettings]);
 
   function set<K extends keyof SystemSettings>(key: K, val: SystemSettings[K]) {
     setSettings((prev) => ({ ...prev, [key]: val }));
@@ -48,17 +63,45 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await api.put("/settings", settings);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+      toast("Pengaturan disimpan", {
+        description: "Konfigurasi sistem berhasil diperbarui.",
+      });
+    } catch {
+      toast.error("Gagal menyimpan", {
+        description: "Tidak dapat menyimpan pengaturan.",
+      });
     } finally {
       setSaving(false);
     }
   }
 
   async function handleResetForecast() {
-    await api.delete("/forecasts/all");
-    setConfirmReset(false);
+    setResetting(true);
+    try {
+      await api.delete("/forecasts/all");
+      setConfirmReset(false);
+      toast("Data forecast direset", {
+        description: "Semua hasil forecast telah dihapus.",
+      });
+    } catch {
+      toast.error("Gagal reset", {
+        description: "Tidak dapat menghapus data forecast.",
+      });
+    } finally {
+      setResetting(false);
+    }
   }
+
+  if (loading)
+    return (
+      <div className="max-w-2xl space-y-4">
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
+    );
+
+  if (error) return <ErrorState onRetry={fetchSettings} />;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -222,11 +265,12 @@ export default function SettingsPage() {
               Reset
             </Button>
           ) : (
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2 shrink-0">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setConfirmReset(false)}
+                disabled={resetting}
               >
                 Batal
               </Button>
@@ -234,8 +278,9 @@ export default function SettingsPage() {
                 variant="destructive"
                 size="sm"
                 onClick={handleResetForecast}
+                disabled={resetting}
               >
-                Konfirmasi
+                {resetting ? "Menghapus..." : "Konfirmasi"}
               </Button>
             </div>
           )}
@@ -244,9 +289,13 @@ export default function SettingsPage() {
 
       {/* Save */}
       <div className="flex justify-end pb-6">
-        <Button onClick={handleSave} disabled={saving} className="gap-2">
+        <Button
+          onClick={handleSave}
+          disabled={saving || !!toleranceWarning}
+          className="gap-2"
+        >
           <Save size={14} />
-          {saved ? "Tersimpan!" : saving ? "Menyimpan..." : "Simpan Pengaturan"}
+          {saving ? "Menyimpan..." : "Simpan Pengaturan"}
         </Button>
       </div>
     </div>

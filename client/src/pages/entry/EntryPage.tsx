@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { NumericStepper } from "@/components/shared/NumericStepper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Leaf, CalendarDays } from "lucide-react";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { toast } from "sonner";
 import { formatDate, getCategoryColor, cn } from "@/lib/utils";
 import api from "@/lib/api";
 import type { Menu } from "@/types";
@@ -13,19 +15,46 @@ interface EntryRow {
   waste: number;
 }
 
+function EntryCardSkeleton() {
+  return (
+    <div className="bg-background border rounded-xl p-5 space-y-4 animate-pulse">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-xl bg-muted" />
+        <div className="space-y-2">
+          <div className="h-4 w-36 bg-muted rounded" />
+          <div className="h-3 w-24 bg-muted rounded" />
+        </div>
+      </div>
+      <div className="h-12 bg-muted rounded-lg" />
+      <div className="h-12 bg-muted rounded-lg" />
+    </div>
+  );
+}
+
 export default function EntryPage() {
   const today = new Date().toISOString();
   const [rows, setRows] = useState<EntryRow[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  const fetchMenus = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    api
+      .get("/menus?status=active")
+      .then((r) => {
+        const active: Menu[] = r.data;
+        setRows(active.map((m) => ({ menu: m, production: 0, waste: 0 })));
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
-    api.get("/menus?status=active").then((r) => {
-      const active: Menu[] = r.data;
-      setRows(active.map((m) => ({ menu: m, production: 0, waste: 0 })));
-    });
-  }, []);
+    fetchMenus();
+  }, [fetchMenus]);
 
   function updateRow(
     menuId: string,
@@ -58,20 +87,30 @@ export default function EntryPage() {
   }, {});
 
   async function handleSave() {
+    const filledRows = rows.filter((r) => r.production > 0);
+    if (filledRows.length === 0) {
+      toast.error("Tidak ada data", {
+        description: "Isi minimal satu data produksi sebelum menyimpan.",
+      });
+      return;
+    }
     setSaving(true);
     try {
-      const records = rows
-        .filter((r) => r.production > 0)
-        .map((r) => ({
-          menuId: r.menu.id,
-          date: new Date().toISOString(),
-          actualProduction: r.production,
-          actualSales: Math.max(0, r.production - r.waste),
-          wasteAmount: r.waste,
-        }));
+      const records = filledRows.map((r) => ({
+        menuId: r.menu.id,
+        date: new Date().toISOString(),
+        actualProduction: r.production,
+        actualSales: Math.max(0, r.production - r.waste),
+        wasteAmount: r.waste,
+      }));
       await api.post("/daily-records", { records });
-      setSavedSuccess(true);
-      setTimeout(() => setSavedSuccess(false), 3000);
+      toast("Laporan disimpan", {
+        description: `${records.length} item berhasil dicatat.`,
+      });
+    } catch {
+      toast.error("Gagal menyimpan", {
+        description: "Periksa koneksi dan coba lagi.",
+      });
     } finally {
       setSaving(false);
     }
@@ -79,7 +118,7 @@ export default function EntryPage() {
 
   return (
     <div className="min-h-screen bg-secondary/30">
-      {/* Staff Header — simplified, no sidebar */}
+      {/* Staff Header */}
       <header className="bg-background border-b px-6 py-3 flex items-center justify-between">
         <div className="text-base font-semibold text-primary">WasteWise</div>
         <div className="flex items-center gap-3">
@@ -88,11 +127,7 @@ export default function EntryPage() {
             {formatDate(today)}
           </div>
           <Button onClick={handleSave} disabled={saving} size="sm">
-            {savedSuccess
-              ? "✓ Tersimpan"
-              : saving
-                ? "Menyimpan..."
-                : "Simpan Laporan"}
+            {saving ? "Menyimpan..." : "Simpan Laporan"}
           </Button>
         </div>
       </header>
@@ -106,7 +141,6 @@ export default function EntryPage() {
         <div className="flex gap-6">
           {/* Menu list */}
           <div className="flex-1 space-y-4">
-            {/* Search bar */}
             <div className="bg-background border rounded-xl px-4 py-3 flex items-center gap-3">
               <Input
                 placeholder="Pindai atau cari nama menu..."
@@ -122,70 +156,85 @@ export default function EntryPage() {
               </Button>
             </div>
 
-            {/* Menu cards */}
-            {filtered.map((row) => (
-              <div
-                key={row.menu.id}
-                className="bg-background border rounded-xl p-5 space-y-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={cn(
-                      "w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold",
-                      getCategoryColor(row.menu.category),
-                    )}
-                  >
-                    {row.menu.name[0]}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-base">
-                      {row.menu.name}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {row.menu.category} • {row.menu.unit}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Produksi
-                    </span>
-                    <NumericStepper
-                      large
-                      value={row.production}
-                      onChange={(v) => updateRow(row.menu.id, "production", v)}
-                    />
-                  </div>
-                  <div
-                    className={cn(
-                      "flex items-center justify-between rounded-lg px-3 py-2",
-                      row.waste > 0 &&
-                        row.production > 0 &&
-                        row.waste / row.production > 0.2
-                        ? "bg-red-50"
-                        : "bg-muted/30",
-                    )}
-                  >
-                    <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Limbah (Sisa)
-                    </span>
-                    <NumericStepper
-                      large
-                      value={row.waste}
-                      onChange={(v) => updateRow(row.menu.id, "waste", v)}
-                      max={row.production}
-                    />
-                  </div>
-                </div>
+            {loading ? (
+              <>
+                <EntryCardSkeleton />
+                <EntryCardSkeleton />
+                <EntryCardSkeleton />
+              </>
+            ) : error ? (
+              <ErrorState onRetry={fetchMenus} />
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-12 text-sm text-muted-foreground">
+                {search
+                  ? "Tidak ada menu yang cocok."
+                  : "Tidak ada menu aktif."}
               </div>
-            ))}
+            ) : (
+              filtered.map((row) => (
+                <div
+                  key={row.menu.id}
+                  className="bg-background border rounded-xl p-5 space-y-4"
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={cn(
+                        "w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold",
+                        getCategoryColor(row.menu.category),
+                      )}
+                    >
+                      {row.menu.name[0]}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-base">
+                        {row.menu.name}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {row.menu.category} • {row.menu.unit}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Produksi
+                      </span>
+                      <NumericStepper
+                        large
+                        value={row.production}
+                        onChange={(v) =>
+                          updateRow(row.menu.id, "production", v)
+                        }
+                      />
+                    </div>
+                    <div
+                      className={cn(
+                        "flex items-center justify-between rounded-lg px-3 py-2",
+                        row.waste > 0 &&
+                          row.production > 0 &&
+                          row.waste / row.production > 0.2
+                          ? "bg-red-50"
+                          : "bg-muted/30",
+                      )}
+                    >
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Limbah (Sisa)
+                      </span>
+                      <NumericStepper
+                        large
+                        value={row.waste}
+                        onChange={(v) => updateRow(row.menu.id, "waste", v)}
+                        max={row.production}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Right panel */}
           <div className="w-72 space-y-4">
-            {/* Efficiency */}
             <div className="bg-background border rounded-xl p-5 text-center">
               <Leaf size={28} className="text-primary mx-auto mb-2" />
               <div className="text-4xl font-bold">{efficiency}%</div>
@@ -200,22 +249,24 @@ export default function EntryPage() {
               </div>
             </div>
 
-            {/* Category Status */}
             <div className="bg-background border rounded-xl p-5">
               <div className="font-medium text-sm mb-3">Status Kategori</div>
-              <div className="space-y-2">
-                {Object.entries(categorySummary).map(([cat, count]) => (
-                  <div key={cat} className="flex justify-between text-sm">
-                    <span>{cat}</span>
-                    <span className="text-xs font-medium px-2 py-0.5 bg-muted rounded">
-                      {count} Item
-                    </span>
-                  </div>
-                ))}
-              </div>
+              {Object.keys(categorySummary).length === 0 ? (
+                <p className="text-xs text-muted-foreground">Memuat...</p>
+              ) : (
+                <div className="space-y-2">
+                  {Object.entries(categorySummary).map(([cat, count]) => (
+                    <div key={cat} className="flex justify-between text-sm">
+                      <span>{cat}</span>
+                      <span className="text-xs font-medium px-2 py-0.5 bg-muted rounded">
+                        {count} Item
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* High Waste Alerts */}
             {highWasteItems.length > 0 && (
               <div className="border-l-4 border-amber-500 bg-amber-50 rounded-r-xl p-4">
                 <div className="flex items-center gap-2 text-amber-800 font-medium text-sm mb-1">

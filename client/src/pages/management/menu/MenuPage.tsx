@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Pencil, Archive, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,12 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { TableSkeleton } from "@/components/shared/PageLoader";
+import { ErrorState } from "@/components/shared/ErrorState";
 import MenuFormModal from "./MenuFormModal";
 import { formatRupiah, calcMargin, cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
+import { toast } from "sonner";
 import api from "@/lib/api";
 import type { Menu } from "@/types";
 
@@ -43,30 +46,52 @@ export default function MenuPage() {
   >("ALL");
   const [modalOpen, setModalOpen] = useState(false);
   const [editMenu, setEditMenu] = useState<Menu | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search);
 
-  async function fetchMenus() {
-    const params: Record<string, string> = {};
-    if (debouncedSearch) params.search = debouncedSearch;
-    if (statusFilter !== "ALL") params.status = statusFilter;
-    const res = await api.get("/menus", { params });
-    setMenus(res.data);
-  }
+  const fetchMenus = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const params: Record<string, string> = {};
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (statusFilter !== "ALL") params.status = statusFilter;
+      const res = await api.get("/menus", { params });
+      setMenus(res.data);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch, statusFilter]);
 
   useEffect(() => {
     fetchMenus();
-  }, [debouncedSearch, statusFilter]);
+  }, [fetchMenus]);
 
   async function toggleArchive(menu: Menu) {
-    await api.patch(`/menus/${menu.id}`, { isActive: !menu.isActive });
-    fetchMenus();
+    setTogglingId(menu.id);
+    try {
+      await api.patch(`/menus/${menu.id}`, { isActive: !menu.isActive });
+      toast(menu.isActive ? "Menu diarsipkan" : "Menu dipulihkan", {
+        description: `${menu.name} berhasil ${menu.isActive ? "diarsipkan" : "dipulihkan"}.`,
+      });
+      fetchMenus();
+    } catch {
+      toast.error("Gagal", {
+        description: "Tidak dapat mengubah status menu.",
+      });
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   function openAdd() {
     setEditMenu(null);
     setModalOpen(true);
   }
-
   function openEdit(m: Menu) {
     setEditMenu(m);
     setModalOpen(true);
@@ -114,102 +139,114 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-background border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/30">
-              {[
-                "Nama Menu",
-                "Satuan",
-                "Harga Jual",
-                "HPP",
-                "Margin",
-                "Status",
-                "Aksi",
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {menus.length === 0 ? (
-              <tr>
-                <td colSpan={7}>
-                  <EmptyState
-                    message="Belum ada menu. Tambahkan menu pertama Anda."
-                    action={
-                      <Button size="sm" onClick={openAdd}>
-                        + Tambah Menu
-                      </Button>
-                    }
-                  />
-                </td>
+      {/* Content */}
+      {loading ? (
+        <TableSkeleton rows={4} cols={7} />
+      ) : error ? (
+        <ErrorState onRetry={fetchMenus} />
+      ) : (
+        <div className="bg-background border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                {[
+                  "Nama Menu",
+                  "Satuan",
+                  "Harga Jual",
+                  "HPP",
+                  "Margin",
+                  "Status",
+                  "Aksi",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ) : (
-              menus.map((m) => (
-                <tr
-                  key={m.id}
-                  className="border-b last:border-0 hover:bg-muted/10"
-                >
-                  <td className="px-4 py-3 font-medium">{m.name}</td>
-                  <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 bg-muted rounded text-xs">
-                      {m.unit}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {formatRupiah(m.price)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {formatRupiah(m.baseCost)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <MarginCell price={m.price} baseCost={m.baseCost} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge
-                      variant={m.isActive ? "aktif" : "diarsipkan"}
+            </thead>
+            <tbody>
+              {menus.length === 0 ? (
+                <tr>
+                  <td colSpan={7}>
+                    <EmptyState
+                      message="Belum ada menu. Tambahkan menu pertama Anda."
+                      action={
+                        <Button size="sm" onClick={openAdd}>
+                          + Tambah Menu
+                        </Button>
+                      }
                     />
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => openEdit(m)}
-                        className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                        title="Edit"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => toggleArchive(m)}
-                        className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-amber-600"
-                        title={m.isActive ? "Arsipkan" : "Pulihkan"}
-                      >
-                        {m.isActive ? (
-                          <Archive size={14} />
-                        ) : (
-                          <RotateCcw size={14} />
-                        )}
-                      </button>
-                    </div>
-                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        {menus.length > 0 && (
-          <div className="px-4 py-2 border-t text-xs text-muted-foreground">
-            Menampilkan {menus.length} menu
-          </div>
-        )}
-      </div>
+              ) : (
+                menus.map((m) => (
+                  <tr
+                    key={m.id}
+                    className="border-b last:border-0 hover:bg-muted/10"
+                  >
+                    <td className="px-4 py-3 font-medium">{m.name}</td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-0.5 bg-muted rounded text-xs">
+                        {m.unit}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {formatRupiah(m.price)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {formatRupiah(m.baseCost)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <MarginCell price={m.price} baseCost={m.baseCost} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge
+                        variant={m.isActive ? "aktif" : "diarsipkan"}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => openEdit(m)}
+                          className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                          title="Edit"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => toggleArchive(m)}
+                          disabled={togglingId === m.id}
+                          className={cn(
+                            "p-1.5 rounded hover:bg-muted transition-opacity",
+                            togglingId === m.id
+                              ? "opacity-40 cursor-wait"
+                              : "text-muted-foreground hover:text-amber-600",
+                          )}
+                          title={m.isActive ? "Arsipkan" : "Pulihkan"}
+                        >
+                          {m.isActive ? (
+                            <Archive size={14} />
+                          ) : (
+                            <RotateCcw size={14} />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          {menus.length > 0 && (
+            <div className="px-4 py-2 border-t text-xs text-muted-foreground">
+              Menampilkan {menus.length} menu
+            </div>
+          )}
+        </div>
+      )}
 
       <MenuFormModal
         open={modalOpen}
@@ -218,6 +255,11 @@ export default function MenuPage() {
         onSuccess={() => {
           setModalOpen(false);
           fetchMenus();
+          toast(editMenu ? "Menu diperbarui" : "Menu ditambahkan", {
+            description: editMenu
+              ? "Data menu berhasil disimpan."
+              : "Menu baru berhasil dibuat.",
+          });
         }}
       />
     </div>

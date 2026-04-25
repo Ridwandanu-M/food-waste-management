@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { NumericStepper } from "@/components/shared/NumericStepper";
+import { TableSkeleton } from "@/components/shared/PageLoader";
+import { ErrorState } from "@/components/shared/ErrorState";
+import { toast } from "sonner";
 import { Download, Sparkles, Check, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -32,39 +35,50 @@ export default function PlanningPage() {
   const [rows, setRows] = useState<PlanRow[]>([]);
   const [tolerance, setTolerance] = useState(10);
   const [insight, setInsight] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    setError(false);
     Promise.all([
       api.get("/forecasts/today"),
       api.get("/settings"),
       api.get("/production-plans/today"),
-    ]).then(([forecastRes, settingsRes, plansRes]) => {
-      const forecasts: any[] = forecastRes.data;
-      const existingPlans: any[] = plansRes.data;
-      const tol = settingsRes.data.wasteTolerancePercent ?? 10;
-      setTolerance(tol);
+    ])
+      .then(([forecastRes, settingsRes, plansRes]) => {
+        const forecasts: any[] = forecastRes.data;
+        const existingPlans: any[] = plansRes.data;
+        const tol = settingsRes.data.wasteTolerancePercent ?? 10;
+        setTolerance(tol);
 
-      const planMap: Record<string, any> = {};
-      for (const p of existingPlans) planMap[p.menuId] = p;
+        const planMap: Record<string, any> = {};
+        for (const p of existingPlans) planMap[p.menuId] = p;
 
-      setRows(
-        forecasts.map((f) => {
-          const existing = planMap[f.menuId];
-          return {
-            menuId: f.menuId,
-            menuName: f.menu?.name ?? "—",
-            predictedAmount: f.predictedDemand,
-            plannedAmount: existing?.plannedAmount ?? f.predictedDemand,
-            warningStatus: (existing?.warningStatus ?? "AMAN") as WarningStatus,
-            status: (existing?.status ?? "DRAFT") as "DRAFT" | "APPROVED",
-          };
-        }),
-      );
-
-      if (forecasts[0]?.insight) setInsight(forecasts[0].insight);
-    });
+        setRows(
+          forecasts.map((f) => {
+            const existing = planMap[f.menuId];
+            return {
+              menuId: f.menuId,
+              menuName: f.menu?.name ?? "—",
+              predictedAmount: f.predictedDemand,
+              plannedAmount: existing?.plannedAmount ?? f.predictedDemand,
+              warningStatus: (existing?.warningStatus ??
+                "AMAN") as WarningStatus,
+              status: (existing?.status ?? "DRAFT") as "DRAFT" | "APPROVED",
+            };
+          }),
+        );
+        if (forecasts[0]?.insight) setInsight(forecasts[0].insight);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   function calcWarning(planned: number, predicted: number): WarningStatus {
     return planned > predicted * (1 + tolerance / 100)
@@ -95,6 +109,13 @@ export default function PlanningPage() {
       const target = updated.find((r) => r.menuId === menuId);
       if (target) await savePlans([target]);
       setRows(updated);
+      toast("Disetujui", {
+        description: `Rencana produksi ${target?.menuName} berhasil disimpan.`,
+      });
+    } catch {
+      toast.error("Gagal", {
+        description: "Tidak dapat menyimpan rencana.",
+      });
     } finally {
       setSaving(null);
     }
@@ -106,6 +127,13 @@ export default function PlanningPage() {
       const updated = rows.map((r) => ({ ...r, status: "APPROVED" as const }));
       await savePlans(updated);
       setRows(updated);
+      toast("Semua disetujui", {
+        description: `${updated.length} rencana produksi berhasil disimpan.`,
+      });
+    } catch {
+      toast.error("Gagal", {
+        description: "Tidak dapat menyimpan semua rencana.",
+      });
     } finally {
       setSaving(null);
     }
@@ -129,7 +157,11 @@ export default function PlanningPage() {
           <Button variant="outline" size="sm">
             <Download size={14} className="mr-1" /> Ekspor Data
           </Button>
-          <Button onClick={approveAll} disabled={saving === "all"} size="sm">
+          <Button
+            onClick={approveAll}
+            disabled={saving === "all" || loading}
+            size="sm"
+          >
             <Check size={14} className="mr-1" />
             {saving === "all" ? "Menyimpan..." : "Approve Semua"}
           </Button>
@@ -137,107 +169,134 @@ export default function PlanningPage() {
       </div>
 
       <div className="flex gap-5">
-        <div className="flex-1 bg-background border rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b">
-            <h2 className="text-sm font-medium">Target Produksi Harian</h2>
-            <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
-              <Sparkles size={12} /> Prediksi ML Aktif
-            </div>
-          </div>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/20">
-                {[
-                  "STATUS",
-                  "MENU ITEM",
-                  "PREDIKSI (PORSI)",
-                  "RENCANA (PORSI)",
-                  "STATUS EWS",
-                  "AKSI",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-12 text-center text-sm text-muted-foreground"
-                  >
-                    Belum ada data forecast untuk hari ini.
-                  </td>
-                </tr>
-              ) : (
-                rows.map((row) => (
-                  <tr
-                    key={row.menuId}
-                    className="border-b last:border-0 hover:bg-muted/10"
-                  >
-                    <td className="px-4 py-3">
-                      <StatusBadge
-                        variant={
-                          row.status === "APPROVED" ? "disetujui" : "draft"
-                        }
-                      />
-                    </td>
-                    <td className="px-4 py-3 font-medium">{row.menuName}</td>
-                    <td className="px-4 py-3 text-center text-muted-foreground">
-                      {row.predictedAmount}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-center">
-                        <NumericStepper
-                          value={row.plannedAmount}
-                          onChange={(v) => updatePlanned(row.menuId, v)}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <StatusBadge
-                        variant={
-                          row.warningStatus === "RISIKO_TINGGI"
-                            ? "risiko"
-                            : "aman"
-                        }
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => approveRow(row.menuId)}
-                        disabled={
-                          row.status === "APPROVED" || saving === row.menuId
-                        }
-                        className={cn(
-                          "w-7 h-7 rounded flex items-center justify-center mx-auto transition",
-                          row.status === "APPROVED"
-                            ? "bg-emerald-100 text-emerald-600 cursor-default"
-                            : saving === row.menuId
-                              ? "bg-muted text-muted-foreground cursor-wait"
-                              : "bg-muted hover:bg-emerald-100 hover:text-emerald-600 text-muted-foreground",
-                        )}
-                        title={
-                          row.status === "APPROVED"
-                            ? "Sudah disetujui"
-                            : "Setujui baris ini"
-                        }
+        {/* Main table */}
+        <div className="flex-1">
+          {loading ? (
+            <TableSkeleton rows={4} cols={6} />
+          ) : error ? (
+            <ErrorState onRetry={fetchData} />
+          ) : (
+            <div className="bg-background border rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b">
+                <div>
+                  <h2 className="text-sm font-medium">
+                    Target Produksi Harian
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Tanggal target:{" "}
+                    <span className="font-medium text-foreground">
+                      {new Date().toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                  <Sparkles size={12} /> Prediksi ML Aktif
+                </div>
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/20">
+                    {[
+                      "STATUS",
+                      "MENU ITEM",
+                      "PREDIKSI (PORSI)",
+                      "RENCANA (PORSI)",
+                      "STATUS EWS",
+                      "AKSI",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground"
                       >
-                        <Check size={14} />
-                      </button>
-                    </td>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-12 text-center text-sm text-muted-foreground"
+                      >
+                        Belum ada data forecast untuk hari ini.
+                      </td>
+                    </tr>
+                  ) : (
+                    rows.map((row) => (
+                      <tr
+                        key={row.menuId}
+                        className="border-b last:border-0 hover:bg-muted/10"
+                      >
+                        <td className="px-4 py-3">
+                          <StatusBadge
+                            variant={
+                              row.status === "APPROVED" ? "disetujui" : "draft"
+                            }
+                          />
+                        </td>
+                        <td className="px-4 py-3 font-medium">
+                          {row.menuName}
+                        </td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">
+                          {row.predictedAmount}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-center">
+                            <NumericStepper
+                              value={row.plannedAmount}
+                              onChange={(v) => updatePlanned(row.menuId, v)}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <StatusBadge
+                            variant={
+                              row.warningStatus === "RISIKO_TINGGI"
+                                ? "risiko"
+                                : "aman"
+                            }
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => approveRow(row.menuId)}
+                            disabled={
+                              row.status === "APPROVED" || saving === row.menuId
+                            }
+                            className={cn(
+                              "w-7 h-7 rounded flex items-center justify-center mx-auto transition",
+                              row.status === "APPROVED"
+                                ? "bg-emerald-100 text-emerald-600 cursor-default"
+                                : saving === row.menuId
+                                  ? "bg-muted text-muted-foreground cursor-wait"
+                                  : "bg-muted hover:bg-emerald-100 hover:text-emerald-600 text-muted-foreground",
+                            )}
+                            title={
+                              row.status === "APPROVED"
+                                ? "Sudah disetujui"
+                                : "Setujui baris ini"
+                            }
+                          >
+                            <Check size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
+        {/* Right panel */}
         <div className="w-64 space-y-4">
           <div className="bg-background border rounded-lg p-4">
             <div className="text-sm font-medium mb-3">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   BarChart,
   Bar,
@@ -10,6 +10,8 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DashboardSkeleton } from "@/components/shared/PageLoader";
+import { ErrorState } from "@/components/shared/ErrorState";
 import { formatRupiah } from "@/lib/utils";
 import api from "@/lib/api";
 
@@ -26,12 +28,27 @@ interface DashboardData {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [period, setPeriod] = useState<"weekly" | "monthly">("monthly");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    api.get(`/dashboard?period=${period}`).then((r) => setData(r.data));
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    api
+      .get(`/dashboard?period=${period}`)
+      .then((r) => setData(r.data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, [period]);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   const topMax = data?.topWasteMenus?.[0]?.wasteKg ?? 1;
+
+  if (loading) return <DashboardSkeleton />;
+  if (error) return <ErrorState onRetry={fetchData} />;
 
   return (
     <div className="space-y-6">
@@ -49,8 +66,11 @@ export default function DashboardPage() {
             <div className="text-2xl font-semibold">
               {data?.totalWasteKg ?? "—"} kg
             </div>
-            <div className="text-xs text-emerald-600 mt-1">
-              +{data?.wasteVsLastMonth ?? 0}% vs bulan lalu
+            <div
+              className={`text-xs mt-1 ${(data?.wasteVsLastMonth ?? 0) > 0 ? "text-red-500" : "text-emerald-600"}`}
+            >
+              {(data?.wasteVsLastMonth ?? 0) > 0 ? "+" : ""}
+              {data?.wasteVsLastMonth ?? 0}% vs bulan lalu
             </div>
           </CardContent>
         </Card>
@@ -61,11 +81,20 @@ export default function DashboardPage() {
               Prakiraan Akurasi
             </div>
             <div className="text-2xl font-semibold">
-              {data?.forecastAccuracy ?? "—"}%
+              {data?.forecastAccuracy ? `${data.forecastAccuracy}%` : "—"}
             </div>
-            <div className="text-xs text-emerald-600 mt-1">
-              +{data?.accuracyVsTarget ?? 0}% vs target
-            </div>
+            {data?.forecastAccuracy ? (
+              <div
+                className={`text-xs mt-1 ${(data?.accuracyVsTarget ?? 0) >= 0 ? "text-emerald-600" : "text-red-500"}`}
+              >
+                {(data?.accuracyVsTarget ?? 0) >= 0 ? "+" : ""}
+                {data?.accuracyVsTarget}% vs target
+              </div>
+            ) : (
+              <div className="text-xs mt-1 text-muted-foreground">
+                Belum ada data forecast
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -111,26 +140,32 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={data?.chartData ?? []}>
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                <Bar
-                  dataKey="aktual"
-                  name="Limbah Aktual"
-                  fill="#0F6E56"
-                  radius={[3, 3, 0, 0]}
-                />
-                <Bar
-                  dataKey="prakiraan"
-                  name="Prakiraan"
-                  fill="#B2D8CE"
-                  radius={[3, 3, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {(data?.chartData?.length ?? 0) === 0 ? (
+              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">
+                Belum ada data untuk ditampilkan.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={data?.chartData ?? []}>
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Legend iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                  <Bar
+                    dataKey="aktual"
+                    name="Limbah Aktual"
+                    fill="#0F6E56"
+                    radius={[3, 3, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="prakiraan"
+                    name="Prakiraan"
+                    fill="#B2D8CE"
+                    radius={[3, 3, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -141,22 +176,28 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {(data?.topWasteMenus ?? []).map((item) => (
-              <div key={item.name}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium">{item.name}</span>
-                  <span className="text-muted-foreground">
-                    {item.wasteKg} kg
-                  </span>
+            {(data?.topWasteMenus?.length ?? 0) === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Belum ada data limbah.
+              </p>
+            ) : (
+              data?.topWasteMenus.map((item) => (
+                <div key={item.name}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-medium">{item.name}</span>
+                    <span className="text-muted-foreground">
+                      {item.wasteKg} kg
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full"
+                      style={{ width: `${(item.wasteKg / topMax) * 100}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full"
-                    style={{ width: `${(item.wasteKg / topMax) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
