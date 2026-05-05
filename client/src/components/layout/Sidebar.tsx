@@ -8,7 +8,7 @@ import {
   Settings,
   ChevronDown,
   LogOut,
-  UtensilsCrossed,
+  FlaskConical,
 } from "lucide-react";
 import { useState } from "react";
 import { cn, getInitials } from "@/lib/utils";
@@ -25,6 +25,7 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [mgmtOpen, setMgmtOpen] = useState(true);
+  const [reportsOpen, setReportsOpen] = useState(false);
 
   const isManager = user?.role === "MANAGER";
   const isAdmin = user?.role === "ADMIN";
@@ -36,7 +37,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-56 flex-shrink-0 border-r bg-background flex flex-col h-screen sticky top-0">
+    <aside className="w-56 shrink-0 border-r bg-background flex flex-col h-screen sticky top-0">
       {/* Logo */}
       <div className="px-4 py-5 border-b">
         <div className="text-base font-semibold text-primary">WasteWise</div>
@@ -57,6 +58,7 @@ export default function Sidebar() {
             >
               <LayoutDashboard size={16} /> Dasbor
             </NavLink>
+
             <NavLink
               to="/planning"
               className={({ isActive }) =>
@@ -65,14 +67,46 @@ export default function Sidebar() {
             >
               <CalendarDays size={16} /> Perencanaan
             </NavLink>
-            <NavLink
-              to="/reports"
-              className={({ isActive }) =>
-                cn(navItem, isActive ? active : inactive)
-              }
-            >
-              <BarChart3 size={16} /> Laporan
-            </NavLink>
+
+            {/* Laporan — expandable */}
+            <div>
+              <button
+                onClick={() => setReportsOpen(!reportsOpen)}
+                className={cn(navItem, "w-full justify-between", inactive)}
+              >
+                <span className="flex items-center gap-3">
+                  <BarChart3 size={16} /> Laporan
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    "transition-transform",
+                    reportsOpen && "rotate-180",
+                  )}
+                />
+              </button>
+              {reportsOpen && (
+                <div className="ml-6 mt-1 space-y-1">
+                  <NavLink
+                    to="/reports"
+                    end
+                    className={({ isActive }) =>
+                      cn(navItem, isActive ? active : inactive, "text-xs")
+                    }
+                  >
+                    Forecast vs Aktual
+                  </NavLink>
+                  <NavLink
+                    to="/reports/evaluation"
+                    className={({ isActive }) =>
+                      cn(navItem, isActive ? active : inactive, "text-xs")
+                    }
+                  >
+                    <FlaskConical size={12} /> Evaluasi Model
+                  </NavLink>
+                </div>
+              )}
+            </div>
           </>
         )}
 

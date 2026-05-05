@@ -252,6 +252,7 @@ export type ForecastResultOrderByWithRelationInput = {
 
 export type ForecastResultWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  menuId_targetDate?: Prisma.ForecastResultMenuIdTargetDateCompoundUniqueInput
   AND?: Prisma.ForecastResultWhereInput | Prisma.ForecastResultWhereInput[]
   OR?: Prisma.ForecastResultWhereInput[]
   NOT?: Prisma.ForecastResultWhereInput | Prisma.ForecastResultWhereInput[]
@@ -262,7 +263,7 @@ export type ForecastResultWhereUniqueInput = Prisma.AtLeast<{
   menuId?: Prisma.StringFilter<"ForecastResult"> | string
   createdAt?: Prisma.DateTimeFilter<"ForecastResult"> | Date | string
   menu?: Prisma.XOR<Prisma.MenuScalarRelationFilter, Prisma.MenuWhereInput>
-}, "id">
+}, "id" | "menuId_targetDate">
 
 export type ForecastResultOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -369,6 +370,11 @@ export type ForecastResultListRelationFilter = {
 
 export type ForecastResultOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type ForecastResultMenuIdTargetDateCompoundUniqueInput = {
+  menuId: string
+  targetDate: Date | string
 }
 
 export type ForecastResultCountOrderByAggregateInput = {

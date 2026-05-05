@@ -25,25 +25,27 @@ import {
   getSettings,
   updateSettings,
 } from "../controllers/settings.controller";
+import { getForecastVsActual } from "../controllers/reports.controller";
+import { getModelEvaluation } from "../controllers/evaluation.controller";
 
 const router = Router();
 
-// ── Auth ──
+// ── Auth ─────────────────────────────────────────────────────────────────────
 router.post("/auth/login", login);
 router.post("/auth/logout", logout);
 router.get("/auth/me", authenticate, me);
 
-// ── Users (Admin only) ──
+// ── Users (Admin only) ───────────────────────────────────────────────────────
 router.get("/users", authenticate, authorize("ADMIN"), getUsers);
 router.post("/users", authenticate, authorize("ADMIN"), createUser);
 router.patch("/users/:id", authenticate, authorize("ADMIN"), updateUser);
 
-// ── Menus (Admin write, semua role read) ──
+// ── Menus ────────────────────────────────────────────────────────────────────
 router.get("/menus", authenticate, getMenus);
 router.post("/menus", authenticate, authorize("ADMIN"), createMenu);
 router.patch("/menus/:id", authenticate, authorize("ADMIN"), updateMenu);
 
-// ── Daily Records (Staff) ──
+// ── Daily Records ─────────────────────────────────────────────────────────────
 router.post(
   "/daily-records",
   authenticate,
@@ -51,10 +53,10 @@ router.post(
   createDailyRecords,
 );
 
-// ── Dashboard (Manager) ──
+// ── Dashboard ─────────────────────────────────────────────────────────────────
 router.get("/dashboard", authenticate, authorize("MANAGER"), getDashboard);
 
-// ── Forecasts (Manager) ──
+// ── Forecasts ─────────────────────────────────────────────────────────────────
 router.get(
   "/forecasts/today",
   authenticate,
@@ -68,7 +70,7 @@ router.delete(
   deleteAllForecasts,
 );
 
-// ── Production Plans (Manager) ──
+// ── Production Plans ──────────────────────────────────────────────────────────
 router.get(
   "/production-plans/today",
   authenticate,
@@ -82,7 +84,21 @@ router.post(
   bulkUpsertPlans,
 );
 
-// ── Settings ──
+// ── Reports ───────────────────────────────────────────────────────────────────
+router.get(
+  "/reports/forecast-vs-actual",
+  authenticate,
+  authorize("MANAGER"),
+  getForecastVsActual,
+);
+router.get(
+  "/reports/model-evaluation",
+  authenticate,
+  authorize("MANAGER"),
+  getModelEvaluation,
+);
+
+// ── Settings ──────────────────────────────────────────────────────────────────
 router.get("/settings", authenticate, getSettings);
 router.put(
   "/settings",

@@ -8,6 +8,7 @@ import DashboardPage from "@/pages/dashboard/DashboardPage";
 import PlanningPage from "@/pages/planning/PlanningPage";
 import EntryPage from "@/pages/entry/EntryPage";
 import ReportsPage from "@/pages/reports/ReportsPage";
+import ModelEvaluationPage from "@/pages/reports/ModelEvaluationPage";
 import UsersPage from "@/pages/management/users/UsersPage";
 import MenuPage from "@/pages/management/menu/MenuPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
@@ -16,7 +17,6 @@ const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/dashboard" replace /> },
   { path: "/login", element: <LoginPage /> },
 
-  // Layout utama: Manager & Admin
   {
     element: (
       <ProtectedRoute allowedRoles={["ADMIN", "MANAGER"]}>
@@ -49,6 +49,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/reports/evaluation",
+        element: (
+          <ProtectedRoute allowedRoles={["MANAGER"]}>
+            <ModelEvaluationPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "/management/users",
         element: (
           <ProtectedRoute allowedRoles={["ADMIN"]}>
@@ -75,7 +83,6 @@ const router = createBrowserRouter([
     ],
   },
 
-  // Layout Staff: tanpa sidebar
   {
     element: (
       <ProtectedRoute allowedRoles={["STAFF"]}>

@@ -24,5 +24,5 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`🚀 WasteWise backend berjalan di http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

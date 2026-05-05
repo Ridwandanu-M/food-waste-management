@@ -19,6 +19,19 @@ interface PlanRow {
   status: "DRAFT" | "APPROVED";
 }
 
+/**
+ * Kirim hanya date-only string (YYYY-MM-DD) bukan full ISO timestamp.
+ * Backend akan menentukan sendiri tanggal yang tepat via getLocalToday().
+ * Ini mencegah mismatch timezone antara frontend dan backend.
+ */
+function getTodayDateStr(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 async function savePlans(rows: PlanRow[]) {
   const plans = rows.map((r) => ({
     menuId: r.menuId,
@@ -26,7 +39,7 @@ async function savePlans(rows: PlanRow[]) {
     plannedAmount: r.plannedAmount,
     warningStatus: r.warningStatus,
     status: r.status,
-    targetDate: new Date().toISOString(),
+    targetDate: getTodayDateStr(), // date-only, bukan ISO timestamp
   }));
   await api.post("/production-plans/bulk", { plans });
 }
@@ -62,10 +75,15 @@ export default function PlanningPage() {
             return {
               menuId: f.menuId,
               menuName: f.menu?.name ?? "—",
-              predictedAmount: f.predictedDemand,
-              plannedAmount: existing?.plannedAmount ?? f.predictedDemand,
+              // Math.round memastikan tidak ada desimal di UI maupun logika EWS
+              predictedAmount: Math.round(f.predictedDemand),
+              plannedAmount: existing
+                ? Math.round(existing.plannedAmount)
+                : Math.round(f.predictedDemand),
               warningStatus: (existing?.warningStatus ??
                 "AMAN") as WarningStatus,
+              // Hanya pakai status existing jika plan memang dari hari ini
+              // (backend sudah filter by today, jadi ini aman)
               status: (existing?.status ?? "DRAFT") as "DRAFT" | "APPROVED",
             };
           }),

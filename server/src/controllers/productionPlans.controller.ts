@@ -4,6 +4,18 @@ import { prisma } from "../lib/prisma";
 import { AuthRequest } from "../middlewares/auth";
 import { PlanStatus } from "../generated/prisma/enums";
 
+/**
+ * Sama dengan di forecasts.controller — midnight UTC dari tanggal lokal.
+ * Dipisah agar tidak ada circular dependency antar controller.
+ */
+function getLocalToday(): Date {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+  return new Date(Date.UTC(year, month, day));
+}
+
 const planSchema = z.object({
   menuId: z.string(),
   targetDate: z.string(),
@@ -21,8 +33,7 @@ export async function getTodayPlans(
   _req: AuthRequest,
   res: Response,
 ): Promise<void> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getLocalToday();
 
   const plans = await prisma.productionPlan.findMany({
     where: { targetDate: today },
@@ -39,13 +50,17 @@ export async function bulkUpsertPlans(
   const { plans } = bulkSchema.parse(req.body);
   const managerId = req.user!.id;
 
+  // Gunakan getLocalToday() — abaikan jam yang dikirim frontend
+  // agar selalu tersimpan sebagai tanggal hari ini yang benar
+  const today = getLocalToday();
+
   const result = await prisma.$transaction(
     plans.map((p) =>
       prisma.productionPlan.upsert({
         where: {
           menuId_targetDate: {
             menuId: p.menuId,
-            targetDate: new Date(p.targetDate),
+            targetDate: today, // ← selalu pakai today dari server, bukan dari request
           },
         },
         update: {
@@ -55,7 +70,7 @@ export async function bulkUpsertPlans(
         },
         create: {
           menuId: p.menuId,
-          targetDate: new Date(p.targetDate),
+          targetDate: today,
           predictedAmount: p.predictedAmount,
           plannedAmount: p.plannedAmount,
           warningStatus: p.warningStatus,

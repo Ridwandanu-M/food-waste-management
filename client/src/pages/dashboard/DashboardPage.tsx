@@ -141,7 +141,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {(data?.chartData?.length ?? 0) === 0 ? (
-              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">
+              <div className="h-55 flex items-center justify-center text-sm text-muted-foreground">
                 Belum ada data untuk ditampilkan.
               </div>
             ) : (
