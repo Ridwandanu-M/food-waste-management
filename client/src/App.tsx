@@ -8,7 +8,6 @@ export default function App() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Cek session dari cookie sebelum render router
     initAuth().finally(() => setReady(true));
   }, []);
 

@@ -21,8 +21,13 @@ interface DashboardData {
   forecastAccuracy: number;
   accuracyVsTarget: number;
   estimatedWasteValue: number;
-  topWasteMenus: { name: string; wasteKg: number }[];
-  chartData: { label: string; aktual: number; prakiraan: number }[];
+  topWasteMenus: { name: string; unit: string; waste: number }[];
+  chartData: {
+    label: string;
+    "Produksi Aktual": number;
+    "Produksi (Prediksi)": number;
+    "Limbah Aktual": number;
+  }[];
 }
 
 export default function DashboardPage() {
@@ -45,7 +50,7 @@ export default function DashboardPage() {
     fetchData();
   }, [fetchData]);
 
-  const topMax = data?.topWasteMenus?.[0]?.wasteKg ?? 1;
+  const topMax = data?.topWasteMenus?.[0]?.waste ?? 1;
 
   if (loading) return <DashboardSkeleton />;
   if (error) return <ErrorState onRetry={fetchData} />;
@@ -64,7 +69,8 @@ export default function DashboardPage() {
               Total Limbah (Bulan Ini)
             </div>
             <div className="text-2xl font-semibold">
-              {data?.totalWasteKg ?? "—"} kg
+              {Math.round(data?.totalWasteKg ?? 0)}{" "}
+              {data?.topWasteMenus?.[0]?.unit ?? "unit"}
             </div>
             <div
               className={`text-xs mt-1 ${(data?.wasteVsLastMonth ?? 0) > 0 ? "text-red-500" : "text-emerald-600"}`}
@@ -118,7 +124,7 @@ export default function DashboardPage() {
         <Card className="col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              Tren Limbah vs Prakiraan Permintaan
+              Tren Produksi Aktual vs Prediksi vs Limbah
             </CardTitle>
             <div className="flex gap-1">
               <Button
@@ -151,16 +157,26 @@ export default function DashboardPage() {
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Legend iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                  {/* Bar: Produksi Aktual */}
                   <Bar
-                    dataKey="aktual"
-                    name="Limbah Aktual"
-                    fill="#0F6E56"
+                    dataKey="Produksi Aktual"
+                    name="Produksi Aktual"
+                    fill="#6366F1"
                     radius={[3, 3, 0, 0]}
                   />
+                  {/* Line: Produksi */}
                   <Bar
-                    dataKey="prakiraan"
-                    name="Prakiraan"
-                    fill="#B2D8CE"
+                    dataKey="Produksi (Prediksi)"
+                    name="Produksi (Prediksi)"
+                    fill="#10B981"
+                    radius={[3, 3, 0, 0]}
+                    opacity={0.7}
+                  />
+                  {/* Bar: Limbah Aktual */}
+                  <Bar
+                    dataKey="Limbah Aktual"
+                    name="Limbah Aktual"
+                    fill="#EF4444"
                     radius={[3, 3, 0, 0]}
                   />
                 </BarChart>
@@ -186,13 +202,13 @@ export default function DashboardPage() {
                   <div className="flex justify-between text-xs mb-1">
                     <span className="font-medium">{item.name}</span>
                     <span className="text-muted-foreground">
-                      {item.wasteKg} kg
+                      {Math.round(item.waste)} {item.unit}
                     </span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-primary rounded-full"
-                      style={{ width: `${(item.wasteKg / topMax) * 100}%` }}
+                      style={{ width: `${(item.waste / topMax) * 100}%` }}
                     />
                   </div>
                 </div>

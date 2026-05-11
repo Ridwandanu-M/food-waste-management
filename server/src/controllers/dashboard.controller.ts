@@ -77,47 +77,55 @@ export async function getDashboard(req: Request, res: Response): Promise<void> {
     }
   }
 
-  // ── Top waste menus ─────────────────────────────────────────────────────
-  const wasteByMenu: Record<string, { name: string; wasteKg: number }> = {};
+  // ── Top waste menus (dalam satuan unit berdasarkan menu.unit) ───────────
+  const wasteByMenu: Record<string, { name: string; unit: string; waste: number }> = {};
   for (const r of currentRecords) {
     if (!wasteByMenu[r.menuId]) {
-      wasteByMenu[r.menuId] = { name: r.menu?.name ?? r.menuId, wasteKg: 0 };
+      wasteByMenu[r.menuId] = {
+        name: r.menu?.name ?? r.menuId,
+        unit: r.menu?.unit ?? "unit",
+        waste: 0
+      };
     }
-    wasteByMenu[r.menuId].wasteKg += r.wasteAmount;
+    wasteByMenu[r.menuId].waste += r.wasteAmount;
   }
   const topWasteMenus = Object.values(wasteByMenu)
-    .sort((a, b) => b.wasteKg - a.wasteKg)
+    .sort((a, b) => b.waste - a.waste)
     .slice(0, 5)
-    .map((m) => ({ ...m, wasteKg: Math.round(m.wasteKg * 10) / 10 }));
+    .map((m) => ({ ...m, waste: Math.round(m.waste * 10) / 10 }));
 
   // ── Chart data ──────────────────────────────────────────────────────────
-  // Kumpulkan semua tanggal unik dari records & forecasts dalam satu pass
-  const chartMap: Record<string, { aktual: number; prakiraan: number }> = {};
+  // Kumpulkan semua tanggal unik dari records dalam satu pass
+  const chartMap: Record<string, { aktual: number; production: number; waste: number }> = {};
 
   const getLabel = (d: Date) =>
     new Date(d).toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
 
   for (const r of currentRecords) {
     const label = getLabel(new Date(r.date));
-    if (!chartMap[label]) chartMap[label] = { aktual: 0, prakiraan: 0 };
-    chartMap[label].aktual += r.wasteAmount;
+    if (!chartMap[label]) chartMap[label] = { aktual: 0, production: 0, waste: 0 };
+    chartMap[label].production += r.actualProduction;
+    chartMap[label].waste += r.wasteAmount;
   }
 
-  // Isi prakiraan dari ForecastResult jika ada
+  // Isi prediksi produksi dari ForecastResult jika ada
   for (const f of forecasts) {
     const label = getLabel(new Date(f.targetDate));
-    if (!chartMap[label]) chartMap[label] = { aktual: 0, prakiraan: 0 };
-    // predictedDemand adalah prediksi produksi, bukan limbah —
-    // estimasi limbah = 15% dari prediksi produksi sebagai proxy
-    chartMap[label].prakiraan += Math.round(f.predictedDemand * 0.15);
+    if (!chartMap[label]) chartMap[label] = { aktual: 0, production: 0, waste: 0 };
+    chartMap[label].aktual += Math.round(f.predictedDemand);
   }
 
   // Sort berdasarkan tanggal kronologis
   const chartData = Object.entries(chartMap).map(([label, v]) => ({
     label,
-    aktual: Math.round(v.aktual * 10) / 10,
-    prakiraan: Math.round(v.prakiraan * 10) / 10,
+    'Produksi Aktual': Math.round(v.aktual),
+    'Produksi (Prediksi)': Math.round(v.production),
+    'Limbah Aktual': Math.round(v.waste),
   }));
+
+  //───────────────
+  // Chart data (sudah dihitung di atas)
+  //───────────────
 
   res.json({
     totalWasteKg: Math.round(totalWasteKg * 10) / 10,

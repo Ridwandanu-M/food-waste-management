@@ -2,12 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { NumericStepper } from "@/components/shared/NumericStepper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, Leaf, CalendarDays } from "lucide-react";
+import { AlertTriangle, Leaf, CalendarDays, LogOut } from "lucide-react";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { toast } from "sonner";
 import { formatDate, getCategoryColor, cn } from "@/lib/utils";
 import api from "@/lib/api";
 import type { Menu } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router";
 
 interface EntryRow {
   menu: Menu;
@@ -38,6 +40,8 @@ export default function EntryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const fetchMenus = useCallback(() => {
     setLoading(true);
@@ -116,12 +120,25 @@ export default function EntryPage() {
     }
   }
 
+  async function handleLogout() {
+    await api.post("/auth/logout");
+    logout();
+    navigate("/login");
+  }
+
   return (
     <div className="min-h-screen bg-secondary/30">
       {/* Staff Header */}
       <header className="bg-background border-b px-6 py-3 flex items-center justify-between">
         <div className="text-base font-semibold text-primary">WasteWise</div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleLogout}
+            className="text-muted-foreground hover:text-destructive"
+            title="Keluar"
+          >
+            <LogOut size={14} />
+          </button>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground border rounded-md px-3 py-1.5">
             <CalendarDays size={14} />
             {formatDate(today)}

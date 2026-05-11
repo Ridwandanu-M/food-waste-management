@@ -81,7 +81,6 @@ model ForecastResult {
 
   menu Menu @relation(fields: [menuId], references: [id])
 
-  // ← Unique constraint baru: satu prediksi per menu per hari
   @@unique([menuId, targetDate])
   @@index([menuId, targetDate])
   @@map("forecast_results")
